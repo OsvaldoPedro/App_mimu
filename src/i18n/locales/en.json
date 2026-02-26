@@ -1,0 +1,126 @@
+{
+  "brand": {
+    "name": "Mimu",
+    "tagline": "Where life meets its best services"
+  },
+  "nav": {
+    "categories": "Categories",
+    "howItWorks": "How it works",
+    "contact": "Contact",
+    "book": "Book",
+    "search": "Search",
+    "language": "Language"
+  },
+  "home": {
+    "heroTitle": "Where life meets",
+    "heroHighlight": "its best services",
+    "heroSubtitle": "Book hotels, restaurants, experiences, travel and more. Everything in one platform, with a modern African identity.",
+    "explore": "Explore services",
+    "howItWorks": "How it works",
+    "categoriesTitle": "Mimu Categories",
+    "categoriesSubtitle": "Find the best services organized by category",
+    "viewOptions": "View options",
+    "benefitsTitle": "Mimu platform benefits",
+    "benefits": {
+      "superapp": "Evolution to super-app of services",
+      "simple": "Simpler life, richer experiences",
+      "marketing": "Intuitive marketing and navigation",
+      "sectors": "Insurance, credit, health and more",
+      "expansion": "Angola → PALOP → Southern Africa"
+    },
+    "featuredTitle": "Featured",
+    "featuredSubtitle": "The most sought-after services on the Mimu platform",
+    "howSteps": {
+      "1title": "Choose the category",
+      "1desc": "Browse the 5 categories and find the service you need.",
+      "2title": "Explore options",
+      "2desc": "Compare prices, locations and partner reviews.",
+      "3title": "Book in seconds",
+      "3desc": "Confirm your booking quickly and securely."
+    },
+    "ctaTitle": "Ready to book?",
+    "ctaSubtitle": "Join Mimu and discover the best services at your fingertips.",
+    "ctaButton": "Get started"
+  },
+  "footer": {
+    "identity": "Modern African identity",
+    "quickLinks": "Quick links",
+    "explore": "Explore",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "copyright": "© {{year}} Mimu. All rights reserved."
+  },
+  "category": {
+    "estadia": "Accommodation & Lodging",
+    "comer": "Food, Parties & Experiences",
+    "mobilidade": "Mobility, Travel & Tickets",
+    "beleza": "Beauty, Wellness & Health",
+    "casa": "Home, Auto & Professional Services"
+  },
+  "listing": {
+    "results": "{{count}} results",
+    "noResults": "No results found",
+    "filterBy": "Filter by",
+    "sortBy": "Sort by",
+    "price": "Price",
+    "rating": "Rating",
+    "location": "Location",
+    "priceLowHigh": "Price: low to high",
+    "priceHighLow": "Price: high to low",
+    "ratingHigh": "Top rated"
+  },
+  "service": {
+    "from": "From",
+    "perNight": "/night",
+    "perPerson": "/person",
+    "rating": "{{value}} reviews",
+    "book": "Book",
+    "details": "Details",
+    "gallery": "Gallery",
+    "amenities": "Amenities",
+    "description": "Description"
+  },
+  "booking": {
+    "selectDate": "Select date",
+    "selectTime": "Select time",
+    "groupSize": "Group size",
+    "specialRequests": "Special requests",
+    "rooms": "Rooms",
+    "selectRoom": "Select room",
+    "guests": "Guests",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "confirm": "Confirm booking",
+    "confirmation": "Booking confirmed",
+    "confirmationMessage": "Your booking has been confirmed. You will receive an email with the details."
+  },
+  "hotel": {
+    "searchRooms": "Search rooms",
+    "roomDetails": "Room details",
+    "roomPrice": "Room price"
+  },
+  "restaurant": {
+    "tableReservation": "Table reservation",
+    "dateTime": "Date and time",
+    "partySize": "Party size"
+  },
+  "consultation": {
+    "selectService": "Select service",
+    "selectStaff": "Select professional",
+    "calendar": "Calendar"
+  },
+  "events": {
+    "eventList": "Event list",
+    "selectSeat": "Select seat",
+    "selectTicket": "Select ticket",
+    "digitalTicket": "Digital ticket"
+  },
+  "common": {
+    "back": "Back",
+    "next": "Next",
+    "cancel": "Cancel",
+    "save": "Save",
+    "loading": "Loading...",
+    "error": "An error occurred"
+  }
+}

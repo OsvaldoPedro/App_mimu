@@ -1,0 +1,126 @@
+{
+  "brand": {
+    "name": "Mimu",
+    "tagline": "Donde la vida encuentra sus mejores servicios"
+  },
+  "nav": {
+    "categories": "Categorías",
+    "howItWorks": "Cómo funciona",
+    "contact": "Contacto",
+    "book": "Reservar",
+    "search": "Buscar",
+    "language": "Idioma"
+  },
+  "home": {
+    "heroTitle": "Donde la vida encuentra",
+    "heroHighlight": "sus mejores servicios",
+    "heroSubtitle": "Reserva hoteles, restaurantes, experiencias, viajes y más. Todo en una plataforma, con identidad africana moderna.",
+    "explore": "Explorar servicios",
+    "howItWorks": "Cómo funciona",
+    "categoriesTitle": "Categorías Mimu",
+    "categoriesSubtitle": "Encuentra los mejores servicios organizados por categoría",
+    "viewOptions": "Ver opciones",
+    "benefitsTitle": "Beneficios de la plataforma Mimu",
+    "benefits": {
+      "superapp": "Evolución hacia super-app de servicios",
+      "simple": "Vida más simple, experiencias más ricas",
+      "marketing": "Marketing y navegación intuitivos",
+      "sectors": "Seguros, crédito, salud y más",
+      "expansion": "Angola → PALOP → África Austral"
+    },
+    "featuredTitle": "Destacados",
+    "featuredSubtitle": "Los servicios más solicitados en la plataforma Mimu",
+    "howSteps": {
+      "1title": "Elige la categoría",
+      "1desc": "Navega por las 5 categorías y encuentra el servicio que necesitas.",
+      "2title": "Explora las opciones",
+      "2desc": "Compara precios, ubicaciones y evaluaciones de los socios.",
+      "3title": "Reserva en segundos",
+      "3desc": "Confirma tu reserva de forma rápida y segura."
+    },
+    "ctaTitle": "¿Listo para reservar?",
+    "ctaSubtitle": "Únete a Mimu y descubre los mejores servicios a tu alcance.",
+    "ctaButton": "Empezar ahora"
+  },
+  "footer": {
+    "identity": "Identidad africana moderna",
+    "quickLinks": "Acceso rápido",
+    "explore": "Explorar",
+    "terms": "Términos",
+    "privacy": "Privacidad",
+    "copyright": "© {{year}} Mimu. Todos los derechos reservados."
+  },
+  "category": {
+    "estadia": "Alojamiento y hospedaje",
+    "comer": "Comida, fiestas y experiencias",
+    "mobilidade": "Movilidad, viajes y billetes",
+    "beleza": "Belleza, bienestar y salud",
+    "casa": "Hogar, auto y servicios profesionales"
+  },
+  "listing": {
+    "results": "{{count}} resultados",
+    "noResults": "No se encontraron resultados",
+    "filterBy": "Filtrar por",
+    "sortBy": "Ordenar por",
+    "price": "Precio",
+    "rating": "Valoración",
+    "location": "Ubicación",
+    "priceLowHigh": "Precio: menor primero",
+    "priceHighLow": "Precio: mayor primero",
+    "ratingHigh": "Mejor valorados"
+  },
+  "service": {
+    "from": "Desde",
+    "perNight": "/noche",
+    "perPerson": "/persona",
+    "rating": "{{value}} valoraciones",
+    "book": "Reservar",
+    "details": "Detalles",
+    "gallery": "Galería",
+    "amenities": "Comodidades",
+    "description": "Descripción"
+  },
+  "booking": {
+    "selectDate": "Seleccionar fecha",
+    "selectTime": "Seleccionar hora",
+    "groupSize": "Tamaño del grupo",
+    "specialRequests": "Peticiones especiales",
+    "rooms": "Habitaciones",
+    "selectRoom": "Seleccionar habitación",
+    "guests": "Huéspedes",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "confirm": "Confirmar reserva",
+    "confirmation": "Reserva confirmada",
+    "confirmationMessage": "Su reserva ha sido confirmada. Recibirá un correo con los detalles."
+  },
+  "hotel": {
+    "searchRooms": "Buscar habitaciones",
+    "roomDetails": "Detalles de la habitación",
+    "roomPrice": "Precio de la habitación"
+  },
+  "restaurant": {
+    "tableReservation": "Reserva de mesa",
+    "dateTime": "Fecha y hora",
+    "partySize": "Número de personas"
+  },
+  "consultation": {
+    "selectService": "Seleccionar servicio",
+    "selectStaff": "Seleccionar profesional",
+    "calendar": "Calendario"
+  },
+  "events": {
+    "eventList": "Lista de eventos",
+    "selectSeat": "Seleccionar asiento",
+    "selectTicket": "Seleccionar billete",
+    "digitalTicket": "Billete digital"
+  },
+  "common": {
+    "back": "Volver",
+    "next": "Siguiente",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "loading": "Cargando...",
+    "error": "Ocurrió un error"
+  }
+}

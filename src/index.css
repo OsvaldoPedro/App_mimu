@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/* Mimu - Paleta de cores premium */
+@theme {
+  /* Vinho escuro principal */
+  --color-mimu-wine: #3A0D0D;
+  --color-mimu-wine-light: #5C1A1A;
+  /* Dourado */
+  --color-mimu-gold: #C58A2B;
+  --color-mimu-gold-hover: #E0B15C;
+  /* Creme e branco */
+  --color-mimu-cream: #F4E8D8;
+  --color-mimu-white: #FFFFFF;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  body {
+    @apply antialiased;
+  }
+}

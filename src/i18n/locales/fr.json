@@ -1,0 +1,126 @@
+{
+  "brand": {
+    "name": "Mimu",
+    "tagline": "Où la vie rencontre ses meilleurs services"
+  },
+  "nav": {
+    "categories": "Catégories",
+    "howItWorks": "Comment ça marche",
+    "contact": "Contact",
+    "book": "Réserver",
+    "search": "Rechercher",
+    "language": "Langue"
+  },
+  "home": {
+    "heroTitle": "Où la vie rencontre",
+    "heroHighlight": "ses meilleurs services",
+    "heroSubtitle": "Réservez des hôtels, restaurants, expériences, voyages et plus. Tout sur une seule plateforme, avec une identité africaine moderne.",
+    "explore": "Explorer les services",
+    "howItWorks": "Comment ça marche",
+    "categoriesTitle": "Catégories Mimu",
+    "categoriesSubtitle": "Trouvez les meilleurs services organisés par catégorie",
+    "viewOptions": "Voir les options",
+    "benefitsTitle": "Avantages de la plateforme Mimu",
+    "benefits": {
+      "superapp": "Évolution vers super-app de services",
+      "simple": "Vie plus simple, expériences plus riches",
+      "marketing": "Marketing et navigation intuitifs",
+      "sectors": "Assurances, crédit, santé et plus",
+      "expansion": "Angola → PALOP → Afrique australe"
+    },
+    "featuredTitle": "En vedette",
+    "featuredSubtitle": "Les services les plus recherchés sur la plateforme Mimu",
+    "howSteps": {
+      "1title": "Choisissez la catégorie",
+      "1desc": "Parcourez les 5 catégories et trouvez le service dont vous avez besoin.",
+      "2title": "Explorez les options",
+      "2desc": "Comparez les prix, les emplacements et les évaluations des partenaires.",
+      "3title": "Réservez en quelques secondes",
+      "3desc": "Confirmez votre réservation rapidement et en toute sécurité."
+    },
+    "ctaTitle": "Prêt à réserver ?",
+    "ctaSubtitle": "Rejoignez Mimu et découvrez les meilleurs services à portée de main.",
+    "ctaButton": "Commencer"
+  },
+  "footer": {
+    "identity": "Identité africaine moderne",
+    "quickLinks": "Accès rapide",
+    "explore": "Explorer",
+    "terms": "Conditions",
+    "privacy": "Confidentialité",
+    "copyright": "© {{year}} Mimu. Tous droits réservés."
+  },
+  "category": {
+    "estadia": "Hébergement et logement",
+    "comer": "Alimentation, fêtes et expériences",
+    "mobilidade": "Mobilité, voyages et billets",
+    "beleza": "Beauté, bien-être et santé",
+    "casa": "Maison, auto et services professionnels"
+  },
+  "listing": {
+    "results": "{{count}} résultats",
+    "noResults": "Aucun résultat trouvé",
+    "filterBy": "Filtrer par",
+    "sortBy": "Trier par",
+    "price": "Prix",
+    "rating": "Évaluation",
+    "location": "Emplacement",
+    "priceLowHigh": "Prix : du moins cher",
+    "priceHighLow": "Prix : du plus cher",
+    "ratingHigh": "Mieux notés"
+  },
+  "service": {
+    "from": "À partir de",
+    "perNight": "/nuit",
+    "perPerson": "/personne",
+    "rating": "{{value}} avis",
+    "book": "Réserver",
+    "details": "Détails",
+    "gallery": "Galerie",
+    "amenities": "Équipements",
+    "description": "Description"
+  },
+  "booking": {
+    "selectDate": "Sélectionner la date",
+    "selectTime": "Sélectionner l'heure",
+    "groupSize": "Taille du groupe",
+    "specialRequests": "Demandes spéciales",
+    "rooms": "Chambres",
+    "selectRoom": "Sélectionner la chambre",
+    "guests": "Clients",
+    "checkIn": "Arrivée",
+    "checkOut": "Départ",
+    "confirm": "Confirmer la réservation",
+    "confirmation": "Réservation confirmée",
+    "confirmationMessage": "Votre réservation a été confirmée. Vous recevrez un e-mail avec les détails."
+  },
+  "hotel": {
+    "searchRooms": "Rechercher des chambres",
+    "roomDetails": "Détails de la chambre",
+    "roomPrice": "Prix de la chambre"
+  },
+  "restaurant": {
+    "tableReservation": "Réservation de table",
+    "dateTime": "Date et heure",
+    "partySize": "Nombre de personnes"
+  },
+  "consultation": {
+    "selectService": "Sélectionner le service",
+    "selectStaff": "Sélectionner le professionnel",
+    "calendar": "Calendrier"
+  },
+  "events": {
+    "eventList": "Liste des événements",
+    "selectSeat": "Sélectionner le siège",
+    "selectTicket": "Sélectionner le billet",
+    "digitalTicket": "Billet numérique"
+  },
+  "common": {
+    "back": "Retour",
+    "next": "Suivant",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite"
+  }
+}
