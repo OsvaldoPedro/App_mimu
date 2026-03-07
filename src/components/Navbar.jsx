@@ -77,17 +77,17 @@ export default function Navbar() {
 
             {user ? (
               <>
-                {isClient && <Link to="/painel" className="px-4 py-2.5 text-[#FFFFFF]/90 hover:text-[#C58A2B] font-medium">Painel</Link>}
-                {isCompany && <Link to="/empresa" className="px-4 py-2.5 text-[#FFFFFF]/90 hover:text-[#C58A2B] font-medium">Empresa</Link>}
-                {isProvider && <Link to="/prestador" className="px-4 py-2.5 text-[#FFFFFF]/90 hover:text-[#C58A2B] font-medium">Prestador</Link>}
+                {isClient && <Link to="/painel" className="px-4 py-2.5 text-[#FFFFFF]/90 hover:text-[#C58A2B] font-medium">{t('nav.dashboard')}</Link>}
+                {isCompany && <Link to="/empresa" className="px-4 py-2.5 text-[#FFFFFF]/90 hover:text-[#C58A2B] font-medium">{t('nav.company')}</Link>}
+                {isProvider && <Link to="/prestador" className="px-4 py-2.5 text-[#FFFFFF]/90 hover:text-[#C58A2B] font-medium">{t('nav.provider')}</Link>}
                 <button onClick={logout} className="px-4 py-2.5 text-[#FFFFFF]/90 hover:text-[#C58A2B] font-medium">
-                  Sair
+                  {t('auth.logout')}
                 </button>
               </>
             ) : (
               <>
                 <Link to="/entrar" className="px-4 py-2.5 text-[#FFFFFF]/90 hover:text-[#C58A2B] font-medium">
-                  Entrar
+                  {t('auth.login')}
                 </Link>
                 <Link
                   to="/registar"
@@ -151,14 +151,14 @@ export default function Navbar() {
               </a>
               {user ? (
                 <>
-                  {isClient && <Link to="/painel" onClick={() => setMenuOpen(false)} className="py-2 text-[#FFFFFF]/90">Painel</Link>}
-                  {isCompany && <Link to="/empresa" onClick={() => setMenuOpen(false)} className="py-2 text-[#FFFFFF]/90">Empresa</Link>}
-                  {isProvider && <Link to="/prestador" onClick={() => setMenuOpen(false)} className="py-2 text-[#FFFFFF]/90">Prestador</Link>}
-                  <button onClick={() => { logout(); setMenuOpen(false); }} className="py-2 text-[#FFFFFF]/90">Sair</button>
+                  {isClient && <Link to="/painel" onClick={() => setMenuOpen(false)} className="py-2 text-[#FFFFFF]/90">{t('nav.dashboard')}</Link>}
+                  {isCompany && <Link to="/empresa" onClick={() => setMenuOpen(false)} className="py-2 text-[#FFFFFF]/90">{t('nav.company')}</Link>}
+                  {isProvider && <Link to="/prestador" onClick={() => setMenuOpen(false)} className="py-2 text-[#FFFFFF]/90">{t('nav.provider')}</Link>}
+                  <button onClick={() => { logout(); setMenuOpen(false); }} className="py-2 text-[#FFFFFF]/90">{t('auth.logout')}</button>
                 </>
               ) : (
                 <>
-                  <Link to="/entrar" onClick={() => setMenuOpen(false)} className="py-2 text-[#FFFFFF]/90">Entrar</Link>
+                  <Link to="/entrar" onClick={() => setMenuOpen(false)} className="py-2 text-[#FFFFFF]/90">{t('auth.login')}</Link>
                   <Link to="/registar" onClick={() => setMenuOpen(false)} className="inline-flex justify-center px-6 py-3 bg-[#C58A2B] hover:bg-[#E0B15C] text-[#3A0D0D] font-semibold rounded-xl">
                     {t('nav.book')}
                   </Link>

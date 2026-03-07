@@ -1,16 +1,21 @@
 # Mimu — Plataforma de Reservas & Serviços
 
 > Onde a vida encontra os seus melhores serviços.
-
-Aplicação web premium de reservas com identidade africana moderna, oferecendo 5 categorias principais de serviços.
+>
+> Aplicação web premium de reservas com identidade africana moderna, oferecendo uma ampla gama de categorias de serviços.
 
 ## Categorias
 
-1. **🏨 Estadia & Alojamento** — Hotéis, alojamento local, guest houses, turismo rural, glamping, hospedaria, pensão, aluguer de residência
-2. **🍽 Comer, Festas & Experiências** — Restaurantes, catering, eventos, jardins, festas, actividades culturais, tours, desporto, aventura, quiosque, cinema
-3. **🚗 Mobilidade, Viagens & Bilhetes** — Rent-a-car, stand, bilhetes (avião, autocarro, cinema), táxi, moto-táxi, agências de viagens, pacotes turísticos
-4. **💆 Beleza, Bem-Estar & Saúde** — Cabeleireiros, barbearias, spa, estética, massagens, personal trainer, clínicas, consultas, postos médicos
-5. **🛠 Casa, Auto & Serviços Profissionais** — Canalização, electricidade, jardinagem, limpeza, oficinas, contabilidade, consultoria, arquitectura, informática, seguros, explicação
+1. **🏨 Dormir & Estadia** — Hotéis, alojamento local, Hospedarias, Aluguer de Residência, AirBNB, Apartamentos por diária
+2. **🍽 Comer, Beber & Experiências** — Restaurantes, Takeaway / Delivery, Bares & Lounge, Catering, Reservas de Mesa
+3. **🎉 Festas & Eventos** — Salões de Eventos, DJs, Fotógrafos & Vídeo, Decoração, Catering para Eventos, Aluguer de Material, Bilheteira / Reservas
+4. **🚗 Transporte & Mobilidade** — Táxi, Rent-a-car, Transfers, bilhetes de autocarro, bilhetes de avião, moto-táxi, agência de viagens, pacotes turísticos
+5. **💄 Beleza, Bem-Estar & Saúde** — Cabeleireiros, Barbearias, Estética, Massagem, Spa, Clínicas, Profissionais de Saúde, Personal Trainer, Postos médicos
+6. **🛠 Casa, Reparações & Mudanças** — Canalizador, electricista, carpinteiro, jardineiro, limpeza, Mudanças & Transportes, assistência técnica, Técnicos de Frio / Ar Condicionado, construção, Empregadas Domésticas
+7. **🚘 Serviços Automóvel** — Mecânica Rápida, Lavagem de Viaturas, Reboque, Troca de Óleo, Diagnóstico Automóvel, mecânico
+8. **📦 Entregas & Logística Local** — Motoboys, Entrega de Documentos, Pequenas Cargas, Recolhas & Envios
+9. **💼 Profissionais & Serviços Empresariais** — Advogados, Contabilistas, Consultores, Designers, Marketing & Comunicação, Técnicos de Informática, Tradução / Redacção, Arquitecto
+10. **📚 Formação & Capacitação** — Explicadores, Cursos Livres, Formação Profissional, Workshops, Formadores
 
 ## Design
 
@@ -42,7 +47,7 @@ npm run preview
 - Explorar categorias e solicitar serviços
 
 ### Conta Empresa
-- Registo: nome empresa, email, telefone, endereço, descrição, categoria, serviços, preço base, horários, logotipo
+- Registo: nome empresa, email, telefone, endereço, descrição, categoria, serviços, horários, logotipo
 - Painel: validar pedidos (aceitar/rejeitar), actualizar estado (em curso, concluído, cancelado), gerir serviços, estatísticas
 
 ### Conta Prestador de Serviços

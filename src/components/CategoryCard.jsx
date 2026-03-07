@@ -6,7 +6,13 @@ export default function CategoryCard({ category, index }) {
   const imageMap = {
     estadia: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80',
     comer: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80',
-    mobilidade: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80',
+    festas: 'https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?w=800&q=80',
+    transporte: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80',
+    automovel: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80',
+    entregas: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
+    profissionais: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&q=80',
+    formacao: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
+    mobilidade: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80',
     beleza: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
     casa: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80'
   }
@@ -14,9 +20,14 @@ export default function CategoryCard({ category, index }) {
   const colorMap = {
     estadia: { border: 'border-blue-900/30', badge: 'bg-blue-900/90' },
     comer: { border: 'border-orange-600/30', badge: 'bg-orange-600/90' },
-    mobilidade: { border: 'border-emerald-700/30', badge: 'bg-emerald-700/90' },
+    festas: { border: 'border-yellow-500/30', badge: 'bg-yellow-500/90' },
+    transporte: { border: 'border-green-600/30', badge: 'bg-green-600/90' },
     beleza: { border: 'border-violet-600/30', badge: 'bg-violet-600/90' },
-    casa: { border: 'border-slate-700/30', badge: 'bg-slate-700/90' }
+    casa: { border: 'border-gray-700/30', badge: 'bg-gray-700/90' },
+    automovel: { border: 'border-slate-300/30', badge: 'bg-slate-300/90' },
+    entregas: { border: 'border-amber-400/30', badge: 'bg-amber-400/90' },
+    profissionais: { border: 'border-red-400/30', badge: 'bg-red-400/90' },
+    formacao: { border: 'border-sky-200/30', badge: 'bg-sky-200/90' }
   }
 
   const colors = colorMap[category.id] || colorMap.casa

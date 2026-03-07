@@ -87,7 +87,7 @@ export default function ServiceDetailPage() {
                 <h1 className="text-2xl font-bold text-[#3A0D0D] mb-4">{service.name}</h1>
                 {!isPublic && (
                   <div className="p-3 mb-4 bg-amber-100 text-amber-800 rounded-xl text-sm">
-                    Este serviço está <strong>pendente de validação</strong> ou não está público. Apenas o proprietário e o admin o conseguem ver.
+                    {t('service.pendingValidation')}
                   </div>
                 )}
                 <div className="flex items-center gap-2 mb-2">
@@ -106,8 +106,8 @@ export default function ServiceDetailPage() {
                   {t('service.from')} {formatPrice(service.price, service.currency)}
                   {service.priceType === 'perNight' && t('service.perNight')}
                   {service.priceType === 'perPerson' && t('service.perPerson')}
-                  {service.priceType === 'perDay' && '/dia'}
-                  {service.priceType === 'session' && '/sessão'}
+                  {service.priceType === 'perDay' && t('service.perDay')}
+                  {service.priceType === 'session' && t('service.perSession')}
                 </p>
                 {isPublic ? (
                   <Link
@@ -122,7 +122,7 @@ export default function ServiceDetailPage() {
                     disabled
                     className="flex items-center justify-center w-full py-4 bg-gray-200 text-gray-500 font-bold rounded-xl cursor-not-allowed"
                   >
-                    Reserva indisponível
+                    {t('service.bookingUnavailable')}
                   </button>
                 )}
               </div>

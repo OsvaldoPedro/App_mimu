@@ -8,12 +8,22 @@ import ServiceForm from '../components/ServiceForm'
 export default function CreateProviderServicePage() {
   const navigate = useNavigate()
   const { user, isProvider } = useAuth()
+  const isApproved = user?.status === 'active'
   const { createProviderService } = useServices()
 
   if (!user || !isProvider) {
     return (
       <div className="min-h-screen bg-[#F4E8D8] flex items-center justify-center">
         <p className="text-[#5C1A1A]">Apenas prestadores podem criar serviços.</p>
+        <Link to="/" className="ml-4 text-[#C58A2B]">Voltar</Link>
+      </div>
+    )
+  }
+
+  if (!isApproved) {
+    return (
+      <div className="min-h-screen bg-[#F4E8D8] flex items-center justify-center">
+        <p className="text-[#5C1A1A]">Conta pendente de aprovação. Não é possível criar serviços ainda.</p>
         <Link to="/" className="ml-4 text-[#C58A2B]">Voltar</Link>
       </div>
     )

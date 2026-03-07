@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useAuth } from '../context/AuthContext'
 import { categories } from '../data/categories'
 
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp'
+const MAX_IMAGES = 2
 const PRICE_TYPES = [
   { value: 'perNight', label: 'Por noite' },
   { value: 'perPerson', label: 'Por pessoa' },
@@ -45,7 +48,9 @@ export default function ServiceForm({ initialService, onSubmit, submitLabel = 'G
   const [amenityInput, setAmenityInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
+  const { user } = useAuth()
+  const canUploadImages = user?.status === 'active'
+  const { t } = useTranslation()
   const category = categories.find((c) => c.id === form.categoryId)
   const serviceTypes = category?.services || []
 
@@ -66,6 +71,12 @@ export default function ServiceForm({ initialService, onSubmit, submitLabel = 'G
     if (!files.length) return
     const valid = files.filter((f) => f.type.startsWith('image/'))
     if (valid.length !== files.length) setError('Apenas ficheiros de imagem (JPEG, PNG, WebP) são aceites.')
+    // enforce max count
+    const total = existingImages.length + imageFiles.length + valid.length
+    if (total > MAX_IMAGES) {
+      setError(t('service.maxImages', { count: MAX_IMAGES }))
+      return
+    }
     setImageFiles((prev) => [...prev, ...valid])
     setImagePreviews((prev) => [...prev, ...valid.map((f) => URL.createObjectURL(f))])
   }
@@ -120,6 +131,11 @@ export default function ServiceForm({ initialService, onSubmit, submitLabel = 'G
         setLoading(false)
         return
       }
+      if (images.length > MAX_IMAGES) {
+        setError(t('service.maxImages', { count: MAX_IMAGES }))
+        setLoading(false)
+        return
+      }
 
       const payload = {
         name: form.name.trim(),
@@ -140,6 +156,11 @@ export default function ServiceForm({ initialService, onSubmit, submitLabel = 'G
       }
       if (!payload.categoryId) {
         setError('Seleccione uma categoria.')
+        setLoading(false)
+        return
+      }
+      if (!payload.serviceType) {
+        setError(t('form.selectServiceType'))
         setLoading(false)
         return
       }
@@ -195,11 +216,12 @@ export default function ServiceForm({ initialService, onSubmit, submitLabel = 'G
 
       {serviceTypes.length > 0 && (
         <div>
-          <label className="block text-sm font-medium text-[#3A0D0D] mb-2">Subcategoria</label>
+          <label className="block text-sm font-medium text-[#3A0D0D] mb-2">{t('form.serviceType')} *</label>
           <select
             name="serviceType"
             value={form.serviceType}
             onChange={handleChange}
+            required
             className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none"
           >
             <option value="">Escolher...</option>
@@ -224,7 +246,7 @@ export default function ServiceForm({ initialService, onSubmit, submitLabel = 'G
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-[#3A0D0D] mb-2">Preço (AOA) *</label>
+          <label className="block text-sm font-medium text-[#3A0D0D] mb-2">{t('form.servicePrice')} *</label>
           <input
             name="price"
             type="number"
@@ -264,7 +286,7 @@ export default function ServiceForm({ initialService, onSubmit, submitLabel = 'G
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#3A0D0D] mb-2">Imagens *</label>
+        <label className="block text-sm font-medium text-[#3A0D0D] mb-2">Imagens {canUploadImages ? '*' : '(apenas após aprovação)'} </label>
         <div className="flex flex-wrap gap-4 items-start">
           {allPreviews.map((src, i) => (
             <div key={i} className="relative group">
@@ -280,18 +302,22 @@ export default function ServiceForm({ initialService, onSubmit, submitLabel = 'G
               </button>
             </div>
           ))}
-          <label className="w-24 h-24 rounded-xl border-2 border-dashed border-[#C58A2B] flex items-center justify-center cursor-pointer hover:bg-[#F4E8D8]/50 text-[#C58A2B] text-2xl">
-            +
-            <input
-              type="file"
-              accept={IMAGE_ACCEPT}
-              multiple
-              onChange={handleImageChange}
-              className="hidden"
-            />
-          </label>
+          {canUploadImages ? (
+            <label className="w-24 h-24 rounded-xl border-2 border-dashed border-[#C58A2B] flex items-center justify-center cursor-pointer hover:bg-[#F4E8D8]/50 text-[#C58A2B] text-2xl">
+              +
+              <input
+                type="file"
+                accept={IMAGE_ACCEPT}
+                multiple
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </label>
+          ) : (
+            <p className="text-sm text-[#5C1A1A]/60">{t('service.uploadOnlyAfterApproval')}</p>
+          )}
         </div>
-        <p className="text-sm text-[#5C1A1A]/70 mt-1">Pelo menos uma imagem. JPEG, PNG ou WebP.</p>
+        <p className="text-sm text-[#5C1A1A]/70 mt-1">Pelo menos uma imagem (máx. 2). JPEG, PNG ou WebP.</p>
       </div>
 
       <div>

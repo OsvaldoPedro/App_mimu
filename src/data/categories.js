@@ -1,7 +1,7 @@
 export const categories = [
   {
     id: 'estadia',
-    name: 'Estadia & Alojamento',
+    name: 'Dormir & Estadia',
     icon: '🏨',
     color: 'blue',
     bgClass: 'bg-blue-900/90',
@@ -9,52 +9,59 @@ export const categories = [
     services: [
       'Hotéis',
       'Alojamento local',
-      'Guest houses',
-      'Turismo rural',
-      'Glamping',
-      'Hospedaria',
-      'Pensão',
-      'Aluguer de Residência'
+      'Hospedarias',
+      'Aluguer de Residência',
+      'AirBNB',
+      'Apartamentos por diária'
     ]
   },
+
   {
     id: 'comer',
-    name: 'Comer, Festas & Experiências',
+    name: 'Comer, Beber & Experiências',
     icon: '🍽',
     color: 'orange',
     bgClass: 'bg-orange-600/90',
     textClass: 'text-orange-100',
     services: [
       'Restaurantes',
+      'Takeaway / Delivery',
+      'Bares & Lounge',
       'Catering',
-      'Espaços de eventos',
-      'Jardins',
-      'Festas',
-      'Actividades culturais',
-      'Tours',
-      'Desporto e aventura',
-      'Desporto',
-      'Aventura',
-      'Quiosque',
-      'Cinema'
+      'Reservas de Mesa'
     ]
   },
   {
-    id: 'mobilidade',
-    name: 'Mobilidade, Viagens & Bilhetes',
+    id: 'festas',
+    name: 'Festas & Eventos',
+    icon: '🎉',
+    color: 'yellow',
+    bgClass: 'bg-yellow-500/90',
+    textClass: 'text-yellow-800',
+    services: [
+      'Salões de Eventos',
+      'DJs',
+      'Fotógrafos & Vídeo',
+      'Decoração',
+      'Catering para Eventos',
+      'Aluguer de Material',
+      'Bilheteira / Reservas'
+    ]
+  },
+  {
+    id: 'transporte',
+    name: 'Transporte & Mobilidade',
     icon: '🚗',
     color: 'green',
-    bgClass: 'bg-emerald-700/90',
-    textClass: 'text-emerald-100',
+    bgClass: 'bg-green-600/90',
+    textClass: 'text-green-100',
     services: [
-      'Rent-a-car',
-      'Stand',
-      'Bilhetes de avião',
-      'Bilhetes de autocarro',
-      'Bilhetes de cinema',
       'Táxi',
+      'Rent-a-car',
+      'Transfers',
+      'Bilhetes de autocarro',
+      'Bilhetes de avião',
       'Moto-táxi',
-      'Táxi executivo',
       'Agência de viagens',
       'Pacotes turísticos'
     ]
@@ -62,45 +69,103 @@ export const categories = [
   {
     id: 'beleza',
     name: 'Beleza, Bem-Estar & Saúde',
-    icon: '💆',
+    icon: '💄',
     color: 'lilac',
     bgClass: 'bg-violet-600/90',
     textClass: 'text-violet-100',
     services: [
       'Cabeleireiros',
       'Barbearias',
-      'Spa',
       'Estética',
-      'Massagens',
-      'Personal trainer',
+      'Massagem',
+      'Spa',
       'Clínicas',
-      'Consultas',
+      'Profissionais de Saúde',
+      'Personal Trainer',
       'Postos médicos'
     ]
   },
   {
     id: 'casa',
-    name: 'Casa, Auto & Serviços Profissionais',
+    name: 'Casa, Reparações & Mudanças',
     icon: '🛠',
-    color: 'graphite',
-    bgClass: 'bg-slate-700/90',
-    textClass: 'text-slate-100',
+    color: 'gray',
+    bgClass: 'bg-gray-700/90',
+    textClass: 'text-gray-100',
     services: [
-      'Canalização',
-      'Electricidade',
-      'Jardinagem',
+      'Canalizador',
+      'Electricista',
+      'Carpinteiro',
+      'Jardineiro',
       'Limpeza',
-      'Oficinas auto',
+      'Mudanças & Transportes',
       'Assistência técnica',
-      'Contabilidade',
-      'Consultoria',
-      'Arquitectura',
-      'Informática',
-      'Mecânico',
+      'Técnicos de Frio / Ar Condicionado',
       'Construção',
-      'Serviços financeiros/seguros',
-      'Explicação',
-      'Explicações'
+      'Empregadas Domésticas'
+    ]
+  },
+  {
+    id: 'automovel',
+    name: 'Serviços Automóvel',
+    icon: '🚘',
+    color: 'slate',
+    bgClass: 'bg-slate-300/90',
+    textClass: 'text-slate-800',
+    services: [
+      'Mecânica Rápida',
+      'Lavagem de Viaturas',
+      'Reboque',
+      'Troca de Óleo',
+      'Diagnóstico Automóvel',
+      'Mecânico'
+    ]
+  },
+  {
+    id: 'entregas',
+    name: 'Entregas & Logística Local',
+    icon: '📦',
+    color: 'amber',
+    bgClass: 'bg-amber-400/90',
+    textClass: 'text-amber-900',
+    services: [
+      'Motoboys',
+      'Entrega de Documentos',
+      'Pequenas Cargas',
+      'Recolhas & Envios'
+    ]
+  },
+  {
+    id: 'profissionais',
+    name: 'Profissionais & Serviços Empresariais',
+    icon: '💼',
+    color: 'red',
+    bgClass: 'bg-red-400/90',
+    textClass: 'text-red-900',
+    services: [
+      'Advogados',
+      'Contabilistas',
+      'Consultores',
+      'Designers',
+      'Marketing & Comunicação',
+      'Técnicos de Informática',
+      'Tradução / Redacção',
+      'Arquitecto'
+    ]
+  },
+  {
+    id: 'formacao',
+    name: 'Formação & Capacitação',
+    icon: '📚',
+    color: 'sky',
+    bgClass: 'bg-sky-200/90',
+    textClass: 'text-sky-800',
+    services: [
+      'Explicadores',
+      'Cursos Livres',
+      'Formação Profissional',
+      'Workshops',
+      'Formadores'
     ]
   }
 ]

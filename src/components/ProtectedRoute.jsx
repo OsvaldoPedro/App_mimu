@@ -5,11 +5,13 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   const { user } = useAuth()
   const location = useLocation()
 
+  // unauthenticated → send to login, remember where they came from
   if (!user) {
     return <Navigate to="/entrar" state={{ from: location }} replace />
   }
 
-  // Bloqueia acesso a painéis de empresa/prestador até aprovação do admin
+  // if the account is pending approval and the route requires that role,
+  // show a friendly message instead of silently redirecting
   if (allowedRoles?.includes('company') && user.role === 'company' && user.status !== 'active') {
     return (
       <div className="min-h-screen bg-[#F4E8D8] flex items-center justify-center px-4">
@@ -43,13 +45,12 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     )
   }
 
+  // enforce allowed roles if provided; otherwise treat as public
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    if (user.role === 'client') return <Navigate to="/painel" replace />
-    if (user.role === 'company') return <Navigate to="/empresa" replace />
-    if (user.role === 'provider') return <Navigate to="/prestador" replace />
-    if (user.role === 'admin') return <Navigate to="/admin" replace />
+    // unauthorized access: send user home instead of guessing their panel
     return <Navigate to="/" replace />
   }
 
+  // finally, allow the wrapped element to render
   return children
 }

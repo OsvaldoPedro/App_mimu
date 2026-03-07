@@ -214,6 +214,91 @@ export const services = [
       'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&q=80'
     ],
     amenities: ['Online', 'Presencial', 'Relatórios', 'Suporte']
+  },
+  // Novas categorias de demonstração
+  {
+    id: 'festas-1',
+    categoryId: 'festas',
+    name: 'DJ & Som Eventos',
+    description: 'DJ profissional para festas, casamentos e eventos corporativos.',
+    price: 80000,
+    currency: 'AOA',
+    priceType: 'event',
+    rating: 4.7,
+    reviewCount: 56,
+    location: 'Luanda',
+    images: ['https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=1200&q=80'],
+    amenities: ['Som completo', 'Iluminação', 'Lista de reprodução personalizada']
+  },
+  {
+    id: 'transp-1',
+    categoryId: 'transporte',
+    name: 'Táxi Executivo Luanda',
+    description: 'Serviço de táxi executivo com carros de luxo e motorista bilíngue.',
+    price: 5000,
+    currency: 'AOA',
+    priceType: 'perKm',
+    rating: 4.5,
+    reviewCount: 210,
+    location: 'Luanda',
+    images: ['https://images.unsplash.com/photo-1517638851339-4b3ecaf1d4fd?w=1200&q=80'],
+    amenities: ['Wi-Fi', 'Ar condicionado', 'Pagamento com cartão']
+  },
+  {
+    id: 'auto-1',
+    categoryId: 'automovel',
+    name: 'Lavagem de Viatura Expresso',
+    description: 'Lavagem completa de carros com produtos ecológicos.',
+    price: 3000,
+    currency: 'AOA',
+    priceType: 'service',
+    rating: 4.4,
+    reviewCount: 98,
+    location: 'Talatona, Luanda',
+    images: ['https://images.unsplash.com/photo-1518440902483-d210e9c3716d?w=1200&q=80'],
+    amenities: ['Produto ecológico', 'Polimento opcional']
+  },
+  {
+    id: 'entregas-1',
+    categoryId: 'entregas',
+    name: 'Motoboy Express',
+    description: 'Entrega rápida de documentos e pequenas encomendas na cidade.',
+    price: 1500,
+    currency: 'AOA',
+    priceType: 'delivery',
+    rating: 4.9,
+    reviewCount: 342,
+    location: 'Luanda',
+    images: ['https://images.unsplash.com/photo-1594824476964-3f49a91d25a8?w=1200&q=80'],
+    amenities: ['Rastreamento', 'Entrega no mesmo dia']
+  },
+  {
+    id: 'prof-1',
+    categoryId: 'profissionais',
+    name: 'Advogado Consultor',
+    description: 'Serviços jurídicos para contratos, licenças e consultoria.',
+    price: 40000,
+    currency: 'AOA',
+    priceType: 'hour',
+    rating: 4.6,
+    reviewCount: 67,
+    location: 'Luanda, Maianga',
+    images: ['https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80'],
+    amenities: ['Consulta presencial', 'Consulta online']
+  },
+  {
+    id: 'formacao-1',
+    categoryId: 'formacao',
+    name: 'Curso de Excel Básico',
+    description: 'Formação de 2 dias em Microsoft Excel para iniciantes.',
+    price: 12000,
+    currency: 'AOA',
+    priceType: 'course',
+    rating: 4.8,
+    reviewCount: 89,
+    location: 'Luanda, Talatona',
+    images: ['https://images.unsplash.com/photo-1581091012184-df86d69f836b?w=1200&q=80'],
+    amenities: ['Certificado', 'Material incluído']
   }
 ]
 

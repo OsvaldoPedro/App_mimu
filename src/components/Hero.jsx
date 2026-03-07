@@ -26,7 +26,7 @@ export default function Hero() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            to="/categoria/estadia"
+            to="/servicos"
             className="inline-flex items-center justify-center px-10 py-4 bg-[#C58A2B] hover:bg-[#E0B15C] text-[#3A0D0D] font-bold text-lg rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-[#C58A2B]/40"
           >
             {t('home.explore')}

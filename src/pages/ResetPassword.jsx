@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useAuth } from '../context/AuthContext'
 
 export default function ResetPassword() {
   const { resetPassword } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token') || ''
@@ -22,15 +24,15 @@ export default function ResetPassword() {
     setSuccess(false)
 
     if (!token) {
-      setError('Token inválido ou em falta. Tenta novamente o processo de recuperação.')
+      setError(t('auth.resetPassword.invalidToken'))
       return
     }
     if (!password || password.length < 6) {
-      setError('A nova palavra-passe deve ter pelo menos 6 caracteres.')
+      setError(t('auth.resetPassword.passwordTooShort'))
       return
     }
     if (password !== confirm) {
-      setError('As palavras-passe não coincidem.')
+      setError(t('auth.resetPassword.passwordMismatch'))
       return
     }
 
@@ -38,7 +40,7 @@ export default function ResetPassword() {
     try {
       const result = await resetPassword(token, password)
       if (!result.success) {
-        setError(result.error || 'Não foi possível redefinir a palavra-passe.')
+        setError(result.error || t('auth.resetPassword.resetFailed'))
         return
       }
       setSuccess(true)
@@ -58,11 +60,11 @@ export default function ResetPassword() {
       <main className="pt-24 pb-16 px-4">
         <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8">
           <Link to="/entrar" className="text-[#C58A2B] text-sm font-medium mb-4 inline-block">
-            ← Voltar ao login
+            {t('auth.resetPassword.backToLogin')}
           </Link>
-          <h1 className="text-2xl font-bold text-[#3A0D0D] mb-2">Definir nova senha</h1>
+          <h1 className="text-2xl font-bold text-[#3A0D0D] mb-2">{t('auth.resetPassword.title')}</h1>
           <p className="text-[#5C1A1A]/80 mb-6">
-            Escolhe uma nova palavra-passe para a tua conta.
+            {t('auth.resetPassword.subtitle')}
           </p>
 
           <form onSubmit={handleReset} className="space-y-4">
@@ -71,12 +73,12 @@ export default function ResetPassword() {
             )}
             {success && (
               <div className="p-3 bg-green-100 text-green-800 rounded-xl text-sm">
-                Senha redefinida com sucesso.
+                {t('auth.resetPassword.success')}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">Nova senha</label>
+              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">{t('auth.resetPassword.newPassword')}</label>
               <input
                 type="password"
                 value={password}
@@ -86,7 +88,7 @@ export default function ResetPassword() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#3A0D0D] mb-2">
-                Confirmar nova senha
+                {t('auth.resetPassword.confirmNewPassword')}
               </label>
               <input
                 type="password"
@@ -101,7 +103,7 @@ export default function ResetPassword() {
               disabled={loading}
               className="w-full py-3 bg-[#C58A2B] hover:bg-[#E0B15C] text-[#3A0D0D] font-bold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading ? 'A redefinir...' : 'Redefinir senha'}
+              {loading ? t('auth.resetPassword.resetting') : t('auth.resetPassword.reset')}
             </button>
           </form>
         </div>

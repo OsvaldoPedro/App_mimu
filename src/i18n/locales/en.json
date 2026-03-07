@@ -9,7 +9,10 @@
     "contact": "Contact",
     "book": "Book",
     "search": "Search",
-    "language": "Language"
+    "language": "Language",
+    "dashboard": "Dashboard",
+    "company": "Company",
+    "provider": "Provider"
   },
   "home": {
     "heroTitle": "Where life meets",
@@ -32,7 +35,7 @@
     "featuredSubtitle": "The most sought-after services on the Mimu platform",
     "howSteps": {
       "1title": "Choose the category",
-      "1desc": "Browse the 5 categories and find the service you need.",
+      "1desc": "Browse the categories and find the service you need.",
       "2title": "Explore options",
       "2desc": "Compare prices, locations and partner reviews.",
       "3title": "Book in seconds",
@@ -51,11 +54,16 @@
     "copyright": "© {{year}} Mimu. All rights reserved."
   },
   "category": {
-    "estadia": "Accommodation & Lodging",
-    "comer": "Food, Parties & Experiences",
-    "mobilidade": "Mobility, Travel & Tickets",
+    "estadia": "Sleep & Stay",
+    "comer": "Eat, Drink & Experiences",
+    "festas": "Parties & Events",
+    "transporte": "Transport & Mobility",
     "beleza": "Beauty, Wellness & Health",
-    "casa": "Home, Auto & Professional Services"
+    "casa": "Home, Repairs & Moves",
+    "automovel": "Automotive Services",
+    "entregas": "Deliveries & Local Logistics",
+    "profissionais": "Professional & Business Services",
+    "formacao": "Training & Upskilling"
   },
   "listing": {
     "results": "{{count}} results",
@@ -71,6 +79,8 @@
   },
   "service": {
     "from": "From",
+    "uploadOnlyAfterApproval": "Images can only be uploaded after account approval",
+    "maxImages": "Maximum {{count}} images allowed",
     "perNight": "/night",
     "perPerson": "/person",
     "rating": "{{value}} reviews",
@@ -78,7 +88,11 @@
     "details": "Details",
     "gallery": "Gallery",
     "amenities": "Amenities",
-    "description": "Description"
+    "description": "Description",
+    "pendingValidation": "This service is <strong>pending validation</strong> or not public. Only the owner and admin can see it.",
+    "perDay": "/day",
+    "perSession": "/session",
+    "bookingUnavailable": "Booking unavailable"
   },
   "booking": {
     "selectDate": "Select date",
@@ -122,5 +136,137 @@
     "save": "Save",
     "loading": "Loading...",
     "error": "An error occurred"
+  },
+  "splash": {
+    "preparing": "Preparing your experience.",
+    "checking": "Checking connection and loading initial data...",
+    "noConnection": "No internet connection. Connect to continue.",
+    "retry": "Try again"
+  },
+  "auth": {
+    "login": "Login",
+    "loginSubtitle": "Access your Mimu account",
+    "loginToReserve": "Login to continue the reservation.",
+    "invalidCredentials": "Invalid credentials",
+    "emailOrPhone": "Email or phone",
+    "emailPlaceholder": "example@email.com",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create account",
+    "logout": "Logout",
+    "resetPassword": {
+      "backToLogin": "← Back to login",
+      "title": "Set new password",
+      "subtitle": "Choose a new password for your account.",
+      "newPassword": "New password",
+      "confirmNewPassword": "Confirm new password",
+      "resetting": "Resetting...",
+      "reset": "Reset password",
+      "success": "Password reset successfully.",
+      "invalidToken": "Invalid or missing token. Try the recovery process again.",
+      "passwordTooShort": "The new password must be at least 6 characters.",
+      "passwordMismatch": "Passwords do not match.",
+      "resetFailed": "Unable to reset password."
+    }
+  },
+  "register": {
+    "title": "Create account",
+    "subtitle": "Choose the type of account you want to create",
+    "client": "Client",
+    "clientDesc": "Book services and track orders",
+    "company": "Company",
+    "companyDesc": "Manage services, orders and partners",
+    "provider": "Service Provider",
+    "providerDesc": "Offer services and receive bookings",
+    "haveAccount": "Already have an account?"
+  },
+  "form": {
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "emailOptional": "Email (optional)",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "submit": "Submit",
+    "back": "Back",
+    "clientAccount": "Client Account",
+    "clientSubtitle": "Create your account to book services",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters"
+  },
+  "company": {
+    "registerTitle": "Register Company",
+    "registerSubtitle": "Offer your services on the Mimu platform",    "companyAccount": "Company Account",
+    "pendingApproval": "The account will be \"Pending Approval\" until validated by the Administrator.",
+    "afterRegister": "After registration, you will have access to the company panel.",    "companyName": "Company Name",
+    "address": "Address",
+    "province": "Province",
+    "city": "City",
+    "description": "Description",
+    "serviceCategory": "Service Category",
+    "serviceTypes": "Service Types",
+    "servicesOffered": "Services Offered",
+    "requiredDocuments": "Required Documents",
+    "optionalDocuments": "Optional Documents",
+    "workingHours": "Working Hours",
+    "password": "Password",
+    "createCompanyAccount": "Create Company Account",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "selectCategoryError": "Please select a service category",
+    "selectOneService": "You must select one service",
+    "selectLocation": "Please select province and city",
+    "missingRequiredDocs": "Missing required documents: ",
+    "attachFile": "Attach file",
+    "attachFiles": "Attach files",
+    "chooseOption": "Choose...",
+    "hours": "Hours",
+    "documents": "Documents",
+    "required": "Required",
+    "optional": "Optional",
+    "upload": "Upload",
+    "selectCategory": "Select a category",
+    "selectProvince": "Select a province",
+    "selectCity": "Select a city"
+  },
+  "provider": {
+    "registerTitle": "Create account – Service Provider",
+    "registerSubtitle": "After registration, you will have access to the provider panel.",
+    "fullName": "Full name",
+    "category": "Category",
+    "servicesOffered": "Services offered",
+    "requiredDocuments": "Required Documents",
+    "optionalDocuments": "Optional Documents",
+    "hours": "Service hours",
+    "choose": "Choose...",
+    "all": "All"
+  },
+  "admin": {
+    "companies": "Companies",
+    "providers": "Service Providers",
+    "users": "Users",
+    "settings": "Settings",
+    "categories": "Categories",
+    "documents": "Documents",
+    "orders": "Orders",
+    "dashboard": "Dashboard",
+    "viewDocuments": "View Documents",
+    "suspendAccount": "Suspend Account",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "suspended": "Suspended"
+    },
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "suspend": "Suspend"
+    }
+  },
+  "form": {
+    "serviceType": "Service Type",
+    "selectServiceType": "Select a service type",
+    "servicePrice": "Service Price (Kz)"
   }
 }

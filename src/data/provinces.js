@@ -1,5 +1,4 @@
-export const provinces = [
-  'Luanda', 'Benguela', 'Huambo', 'Huíla', 'Cabinda', 'Malanje', 'Namibe',
-  'Uíge', 'Bié', 'Cuando-Cubango', 'Cuanza Norte', 'Cuanza Sul', 'Cunene',
-  'Lunda Norte', 'Lunda Sul', 'Moxico', 'Zaire'
-]
+import angolaLocations from '../constants/angolaLocations'
+
+// derive province list from the locations map to avoid duplication
+export const provinces = Object.keys(angolaLocations)

@@ -1,29 +1,30 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { categories } from '../data/categories'
 
 export default function FeaturedSection() {
   const { t } = useTranslation()
 
-  const features = [
-    {
-      image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80',
-      title: t('category.estadia'),
-      subtitle: 'Encontre o espaço perfeito para a sua estadia',
-      category: 'estadia'
-    },
-    {
-      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80',
-      title: t('category.comer'),
-      subtitle: 'Sabores e momentos inesquecíveis',
-      category: 'comer'
-    },
-    {
-      image: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&q=80',
-      title: t('category.mobilidade'),
-      subtitle: 'Bilhetes, rent-a-car e agências',
-      category: 'mobilidade'
-    }
-  ]
+  const imageMap = {
+    estadia: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80',
+    comer: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80',
+    festas: 'https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?w=600&q=80',
+    transporte: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=600&q=80',
+    mobilidade: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&q=80',
+    beleza: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&q=80',
+    casa: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80',
+    automovel: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=600&q=80',
+    entregas: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80',
+    profissionais: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&q=80',
+    formacao: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&q=80'
+  }
+
+  const features = categories.slice(0, 3).map(c => ({
+    image: imageMap[c.id] || imageMap.estadia,
+    title: t(`category.${c.id}`),
+    subtitle: c.name,
+    category: c.id
+  }))
 
   return (
     <section className="py-16 md:py-24 bg-[#3A0D0D]">

@@ -9,7 +9,10 @@
     "contact": "Contact",
     "book": "Réserver",
     "search": "Rechercher",
-    "language": "Langue"
+    "language": "Langue",
+    "dashboard": "Tableau de bord",
+    "company": "Entreprise",
+    "provider": "Prestataire"
   },
   "home": {
     "heroTitle": "Où la vie rencontre",
@@ -32,7 +35,7 @@
     "featuredSubtitle": "Les services les plus recherchés sur la plateforme Mimu",
     "howSteps": {
       "1title": "Choisissez la catégorie",
-      "1desc": "Parcourez les 5 catégories et trouvez le service dont vous avez besoin.",
+      "1desc": "Parcourez les catégories et trouvez le service dont vous avez besoin.",
       "2title": "Explorez les options",
       "2desc": "Comparez les prix, les emplacements et les évaluations des partenaires.",
       "3title": "Réservez en quelques secondes",
@@ -51,11 +54,16 @@
     "copyright": "© {{year}} Mimu. Tous droits réservés."
   },
   "category": {
-    "estadia": "Hébergement et logement",
-    "comer": "Alimentation, fêtes et expériences",
-    "mobilidade": "Mobilité, voyages et billets",
-    "beleza": "Beauté, bien-être et santé",
-    "casa": "Maison, auto et services professionnels"
+    "estadia": "Dormir & Séjour",
+    "comer": "Manger, Boire & Expériences",
+    "festas": "Fêtes & Événements",
+    "transporte": "Transport & Mobilité",
+    "beleza": "Beauté, Bien-être & Santé",
+    "casa": "Maison, Réparations & Déménagement",
+    "automovel": "Services Automobile",
+    "entregas": "Livraisons & Logistique Locale",
+    "profissionais": "Professionnels & Services d'Entreprise",
+    "formacao": "Formation & Capacitation"
   },
   "listing": {
     "results": "{{count}} résultats",
@@ -71,6 +79,8 @@
   },
   "service": {
     "from": "À partir de",
+    "uploadOnlyAfterApproval": "Les images ne peuvent être téléchargées qu'après l'approbation du compte",
+    "maxImages": "Maximum {{count}} images autorisées",
     "perNight": "/nuit",
     "perPerson": "/personne",
     "rating": "{{value}} avis",
@@ -78,7 +88,11 @@
     "details": "Détails",
     "gallery": "Galerie",
     "amenities": "Équipements",
-    "description": "Description"
+    "description": "Description",
+    "pendingValidation": "Ce service est <strong>en attente de validation</strong> ou n'est pas public. Seuls le propriétaire et l'admin peuvent le voir.",
+    "perDay": "/jour",
+    "perSession": "/séance",
+    "bookingUnavailable": "Réservation indisponible"
   },
   "booking": {
     "selectDate": "Sélectionner la date",
@@ -122,5 +136,136 @@
     "save": "Enregistrer",
     "loading": "Chargement...",
     "error": "Une erreur s'est produite"
+  },
+  "splash": {
+    "preparing": "Préparation de votre expérience.",
+    "checking": "Vérification de la connexion et chargement des données initiales...",
+    "noConnection": "Pas de connexion internet. Connectez-vous pour continuer.",
+    "retry": "Réessayer"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "loginSubtitle": "Accédez à votre compte Mimu",
+    "loginToReserve": "Connectez-vous pour continuer la réservation.",
+    "invalidCredentials": "Identifiants invalides",
+    "emailOrPhone": "Email ou téléphone",
+    "emailPlaceholder": "exemple@email.com",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "createAccount": "Créer un compte",
+    "logout": "Se déconnecter",
+    "resetPassword": {
+      "backToLogin": "← Retour à la connexion",
+      "title": "Définir un nouveau mot de passe",
+      "subtitle": "Choisissez un nouveau mot de passe pour votre compte.",
+      "newPassword": "Nouveau mot de passe",
+      "confirmNewPassword": "Confirmer le nouveau mot de passe",
+      "resetting": "Réinitialisation...",
+      "reset": "Réinitialiser le mot de passe",
+      "success": "Mot de passe réinitialisé avec succès.",
+      "invalidToken": "Jeton invalide ou manquant. Réessayez le processus de récupération.",
+      "passwordTooShort": "Le nouveau mot de passe doit contenir au moins 6 caractères.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "resetFailed": "Impossible de réinitialiser le mot de passe."
+    }
+  },
+  "register": {
+    "title": "Créer un compte",
+    "subtitle": "Choisissez le type de compte que vous souhaitez créer",
+    "client": "Client",
+    "clientDesc": "Réserver des services et suivre les commandes",
+    "company": "Entreprise",
+    "companyDesc": "Gérer les services, commandes et partenaires",
+    "provider": "Prestataire de services",
+    "providerDesc": "Offrir des services et recevoir des réservations",
+    "haveAccount": "Vous avez déjà un compte ?"
+  },
+  "form": {
+    "name": "Nom",
+    "phone": "Téléphone",
+    "email": "Email",
+    "emailOptional": "Email (optionnel)",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "submit": "Envoyer",
+    "back": "Retour",
+    "clientAccount": "Compte Client",
+    "clientSubtitle": "Créez votre compte pour réserver des services",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères"
+  },
+  "company": {
+    "registerTitle": "Enregistrer l'entreprise",
+    "registerSubtitle": "Offrez vos services sur la plateforme Mimu",
+    "companyName": "Nom de l'entreprise",
+    "address": "Adresse",
+    "province": "Province",
+    "city": "Ville",
+    "description": "Description",
+    "serviceCategory": "Catégorie de Services",
+    "serviceTypes": "Types de services",
+    "servicesOffered": "Services offerts",
+    "requiredDocuments": "Documents requis",
+    "optionalDocuments": "Documents optionnels",
+    "workingHours": "Heures de travail",
+    "password": "Mot de passe",
+    "createCompanyAccount": "Créer un compte entreprise",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+    "selectCategoryError": "Veuillez sélectionner une catégorie de services",
+    "selectOneService": "Vous devez sélectionner un service",
+    "selectLocation": "Veuillez sélectionner la province et la ville",
+    "missingRequiredDocs": "Documents requis manquants: ",
+    "attachFile": "Joindre un fichier",
+    "attachFiles": "Joindre des fichiers",
+    "chooseOption": "Choisir...",
+    "hours": "Heures",
+    "documents": "Documents",
+    "required": "Requis",
+    "optional": "Optionnel",
+    "upload": "Télécharger",
+    "selectCategory": "Sélectionner une catégorie",
+    "selectProvince": "Sélectionner une province",
+    "selectCity": "Sélectionner une ville"
+  },
+  "provider": {
+    "registerTitle": "Créer un compte – Prestataire de services",
+    "registerSubtitle": "Après l'inscription, vous aurez accès au panneau du prestataire.",
+    "fullName": "Nom complet",
+    "category": "Catégorie",
+    "servicesOffered": "Services offerts",
+    "requiredDocuments": "Documents requis",
+    "optionalDocuments": "Documents optionnels",
+    "hours": "Heures de service",
+    "choose": "Choisir...",
+    "all": "Tous"
+  },
+  "admin": {
+    "companies": "Entreprises",
+    "providers": "Fournisseurs de Services",
+    "users": "Utilisateurs",
+    "settings": "Paramètres",
+    "categories": "Catégories",
+    "documents": "Documents",
+    "orders": "Commandes",
+    "dashboard": "Tableau de Bord",
+    "viewDocuments": "Voir Documents",
+    "suspendAccount": "Suspendre Compte",
+    "status": {
+      "pending": "En Attente",
+      "approved": "Approuvé",
+      "rejected": "Rejeté",
+      "suspended": "Suspendu"
+    },
+    "actions": {
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "suspend": "Suspendre"
+    }
+  },
+  "form": {
+    "serviceType": "Type de Service",
+    "selectServiceType": "Sélectionnez un type de service",
+    "servicePrice": "Prix du Service (Kz)"
   }
 }

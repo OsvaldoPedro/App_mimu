@@ -2,9 +2,11 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import SplashScreen from './components/SplashScreen'
 import PageLoader from './components/PageLoader'
 import { useNetwork } from './context/NetworkContext'
-import ProtectedRoute from './components/ProtectedRoute'
+import ProtectedRoute from './components/ProtectedRoute' // per‑route authorization
+// ProtectedRoleRoute removed – logic handled by ProtectedRoute and individual route guards
 import HomePage from './pages/HomePage'
 import CategoryPage from './pages/CategoryPage'
+import AllServicesPage from './pages/AllServicesPage'
 import ServiceDetailPage from './pages/ServiceDetailPage'
 import BookingPage from './pages/BookingPage'
 import LoginPage from './pages/LoginPage'
@@ -25,58 +27,67 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import CreateProviderServicePage from './pages/CreateProviderServicePage'
 import MyProviderServicesPage from './pages/MyProviderServicesPage'
 import EditProviderServicePage from './pages/EditProviderServicePage'
+import AdminCategories from './pages/admin/AdminCategories'
+import AdminProviders from './pages/admin/AdminProviders'
+import AdminCompanies from './pages/admin/AdminCompanies'
+import AdminOrders from './pages/admin/AdminOrders'
+import AdminDocuments from './pages/admin/AdminDocuments'
+import AdminUsersPage from './pages/admin/AdminUsersPage'
+import AdminSettingsPage from './pages/admin/AdminSettingsPage'
 
 function AppRoutes() {
   const location = useLocation()
 
-
-  const loading = false
-
-/*
-  const [loading, setLoading] = useState(false)
-  const [prevPath, setPrevPath] = useState(location.pathname)
-
-  useEffect(() => {
-    if (location.pathname !== prevPath) {
-      setPrevPath(location.pathname)
-      setLoading(true)
-      const timer = setTimeout(() => setLoading(false), 10000)
-      return () => clearTimeout(timer)
-    }
-  }, [location.pathname, prevPath])
-*/
-
   return (
-    <div className="relative">
+    <div className="min-h-screen bg-gray-100">
       <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/categoria/:categoryId" element={<CategoryPage />} />
-      <Route path="/servico/:serviceId" element={<ServiceDetailPage />} />
-      <Route path="/servico/:serviceId/reservar" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
+        {/* ===== ROTAS PÚBLICAS ===== */}
+        {/* Rota inicial - Abre a página principal */}
+        <Route path="/" element={<HomePage />} />
+        
+        {/* Navegação de serviços e produtos */}
+        <Route path="/servicos" element={<AllServicesPage />} />
+        <Route path="/categoria/:categoryId" element={<CategoryPage />} />
+        <Route path="/servico/:serviceId" element={<ServiceDetailPage />} />
+        <Route path="/servico/:serviceId/reservar" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
 
-      <Route path="/entrar" element={<LoginPage />} />
-      <Route path="/recover-password" element={<RecoverPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/registar" element={<RegisterPage />} />
-      <Route path="/registar/client" element={<RegisterClientPage />} />
-      <Route path="/registar/company" element={<RegisterCompanyPage />} />
-      <Route path="/registar/provider" element={<RegisterProviderPage />} />
+        {/* Autenticação */}
+        <Route path="/entrar" element={<LoginPage />} />
+        <Route path="/registar" element={<RegisterPage />} />
+        <Route path="/registar/client" element={<RegisterClientPage />} />
+        <Route path="/registar/company" element={<RegisterCompanyPage />} />
+        <Route path="/registar/provider" element={<RegisterProviderPage />} />
+        <Route path="/recover-password" element={<RecoverPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-      <Route path="/painel" element={<ProtectedRoute allowedRoles={['client']}><ClientDashboard /></ProtectedRoute>} />
-      <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-      <Route path="/empresa/servicos/criar" element={<ProtectedRoute allowedRoles={['company']}><CreateServicePage /></ProtectedRoute>} />
-      <Route path="/empresa/servicos/:serviceId/editar" element={<ProtectedRoute allowedRoles={['company']}><EditServicePage /></ProtectedRoute>} />
-      <Route path="/empresa/servicos" element={<ProtectedRoute allowedRoles={['company']}><MyServicesPage /></ProtectedRoute>} />
-      <Route path="/empresa" element={<ProtectedRoute allowedRoles={['company']}><CompanyDashboard /></ProtectedRoute>} />
-      <Route path="/prestador/servicos/criar" element={<ProtectedRoute allowedRoles={['provider']}><CreateProviderServicePage /></ProtectedRoute>} />
-      <Route path="/prestador/servicos/:serviceId/editar" element={<ProtectedRoute allowedRoles={['provider']}><EditProviderServicePage /></ProtectedRoute>} />
-      <Route path="/prestador/servicos" element={<ProtectedRoute allowedRoles={['provider']}><MyProviderServicesPage /></ProtectedRoute>} />
-      <Route path="/prestador" element={<ProtectedRoute allowedRoles={['provider']}><ProviderDashboard /></ProtectedRoute>} />
+        {/* ===== ROTAS PROTEGIDAS - CLIENTE ===== */}
+        <Route path="/painel" element={<ProtectedRoute allowedRoles={['client']}><ClientDashboard /></ProtectedRoute>} />
+        <Route path="/perfil" element={<ProtectedRoute><EditProfilePage /></ProtectedRoute>} />
 
-      {/* Exemplo de uso: página única de edição de perfil para qualquer tipo de conta */}
-      <Route path="/perfil" element={<ProtectedRoute><EditProfilePage /></ProtectedRoute>} />
+        {/* ===== ROTAS PROTEGIDAS - EMPRESA ===== */}
+        <Route path="/empresa" element={<ProtectedRoute allowedRoles={['company']}><CompanyDashboard /></ProtectedRoute>} />
+        <Route path="/empresa/servicos" element={<ProtectedRoute allowedRoles={['company']}><MyServicesPage /></ProtectedRoute>} />
+        <Route path="/empresa/servicos/criar" element={<ProtectedRoute allowedRoles={['company']}><CreateServicePage /></ProtectedRoute>} />
+        <Route path="/empresa/servicos/:serviceId/editar" element={<ProtectedRoute allowedRoles={['company']}><EditServicePage /></ProtectedRoute>} />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+        {/* ===== ROTAS PROTEGIDAS - PRESTADOR ===== */}
+        <Route path="/prestador" element={<ProtectedRoute allowedRoles={['provider']}><ProviderDashboard /></ProtectedRoute>} />
+        <Route path="/prestador/servicos" element={<ProtectedRoute allowedRoles={['provider']}><MyProviderServicesPage /></ProtectedRoute>} />
+        <Route path="/prestador/servicos/criar" element={<ProtectedRoute allowedRoles={['provider']}><CreateProviderServicePage /></ProtectedRoute>} />
+        <Route path="/prestador/servicos/:serviceId/editar" element={<ProtectedRoute allowedRoles={['provider']}><EditProviderServicePage /></ProtectedRoute>} />
+
+        {/* ===== ROTAS PROTEGIDAS - ADMIN ===== */}
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/categorias" element={<ProtectedRoute allowedRoles={['admin']}><AdminCategories /></ProtectedRoute>} />
+        <Route path="/admin/prestadores" element={<ProtectedRoute allowedRoles={['admin']}><AdminProviders /></ProtectedRoute>} />
+        <Route path="/admin/empresas" element={<ProtectedRoute allowedRoles={['admin']}><AdminCompanies /></ProtectedRoute>} />
+        <Route path="/admin/utilizadores" element={<ProtectedRoute allowedRoles={['admin']}><AdminUsersPage /></ProtectedRoute>} />
+        <Route path="/admin/configuracoes" element={<ProtectedRoute allowedRoles={['admin']}><AdminSettingsPage /></ProtectedRoute>} />
+        <Route path="/admin/pedidos" element={<ProtectedRoute allowedRoles={['admin']}><AdminOrders /></ProtectedRoute>} />
+        <Route path="/admin/documentos" element={<ProtectedRoute allowedRoles={['admin']}><AdminDocuments /></ProtectedRoute>} />
+
+        {/* ===== ROTA CORINGA - REDIRECIONA PARA HOME ===== */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   )

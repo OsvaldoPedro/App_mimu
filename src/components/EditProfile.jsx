@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { categories } from '../data/categories'
-import { provinces } from '../data/provinces'
+import AngolaLocationSelect from '../components/AngolaLocationSelect' // new location picker
 
 const IMAGE_KEY = { cliente: 'photo', empresa: 'logo', prestador: 'photo' }
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp'
@@ -14,9 +14,9 @@ function getInitialForm(user, userType) {
     phone: user.phone ?? '',
     address: user.address ?? '',
     province: user.province ?? '',
+    city: user.city ?? '',
     description: user.description ?? '',
     companyName: user.companyName ?? '',
-    basePrice: user.basePrice ?? '',
     hours: user.hours ?? '',
     categoryId: user.categoryId ?? '',
     serviceTypes: Array.isArray(user.serviceTypes) ? user.serviceTypes : []
@@ -31,6 +31,7 @@ export default function EditProfile({ onSuccess, className = '' }) {
   const [imagePreview, setImagePreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [locationError, setLocationError] = useState('')
   const [success, setSuccess] = useState(false)
   const [secCurrent, setSecCurrent] = useState('')
   const [secNew, setSecNew] = useState('')
@@ -80,9 +81,14 @@ export default function EditProfile({ onSuccess, className = '' }) {
     }
     if (userType === 'prestador') {
       payload.province = form.province
-      payload.basePrice = form.basePrice ? Number(form.basePrice) : null
+      payload.city = form.city
+      payload.city = form.city
       payload.hours = form.hours
       payload.serviceTypes = form.serviceTypes
+    }
+    if (userType === 'empresa') {
+      payload.province = form.province
+      payload.city = form.city
     }
     if (imageFile) payload[imageKey] = imageFile
     else if (form[imageKey] === '' || form[imageKey] === null) payload[imageKey] = ''
@@ -112,6 +118,13 @@ export default function EditProfile({ onSuccess, className = '' }) {
     setError('')
     setSuccess(false)
     setLoading(true)
+
+    // ensure both province and city are chosen
+    if (!form.province || !form.city) {
+      setError('Selecciona província e município')
+      setLoading(false)
+      return
+    }
 
     try {
       const payload = buildPayload()
@@ -289,42 +302,37 @@ export default function EditProfile({ onSuccess, className = '' }) {
         </div>
 
         {(userType === 'empresa' || userType === 'prestador') && (
-          <div>
-            <label className="block text-sm font-medium text-[#3A0D0D] mb-2">Morada</label>
-            <input
-              name="address"
-              value={form.address}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none"
-            />
-          </div>
+          <>
+            <div>
+              <AngolaLocationSelect
+                province={form.province}
+                city={form.city}
+                onProvinceChange={v => { setForm(f => ({ ...f, province: v, city: '' })); setLocationError('') }}
+                onCityChange={v => { setForm(f => ({ ...f, city: v })); setLocationError('') }}
+                error={locationError}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">Morada</label>
+              <input
+                name="address"
+                value={form.address}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none"
+              />
+            </div>
+          </>
         )}
 
         {userType === 'prestador' && (
           <>
             <div>
-              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">Província</label>
-              <select
-                name="province"
-                value={form.province}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none"
-              >
-                <option value="">Escolher...</option>
-                {provinces.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">Preço base (AOA)</label>
-              <input
-                name="basePrice"
-                type="number"
-                min="0"
-                value={form.basePrice}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none"
+              <AngolaLocationSelect
+                province={form.province}
+                city={form.city}
+                onProvinceChange={v => { setForm(f => ({ ...f, province: v, city: '' })); setLocationError('') }}
+                onCityChange={v => { setForm(f => ({ ...f, city: v })); setLocationError('') }}
+                error={locationError}
               />
             </div>
             <div>
