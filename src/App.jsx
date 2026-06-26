@@ -5,10 +5,11 @@ import { useTheme } from './context/ThemeContext'
 import { useAuth } from './context/AuthContext'
 import SplashController from './components/SplashController'
 import PageLoader from './components/PageLoader'
-import ProtectedRoute from './components/ProtectedRoute' // per‑route authorization
-import MobileBottomNav from './components/MobileBottomNav' // << Novo Navbar nativo
+import ProtectedRoute from './components/ProtectedRoute'
+import MobileBottomNav from './components/MobileBottomNav'
 import AdminLayout from './components/layouts/AdminLayout'
 import DashboardLayout from './components/layouts/DashboardLayout'
+import PWAInstallPrompt from './components/PWAInstallPrompt'
 
 // Lazy loaded page components
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -231,6 +232,7 @@ function App() {
         },
       }} />
       <AppRoutes />
+      <PWAInstallPrompt />
     </>
   )
 }
