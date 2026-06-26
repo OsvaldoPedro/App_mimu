@@ -87,12 +87,12 @@ const ResetApplicationData = () => {
       <h3 className="text-lg font-semibold text-red-600 mb-4">
         ⚠️ Reset de Dados da Aplicação
       </h3>
-      <p className="text-sm text-gray-600 mb-4">
+      <p className="text-sm text-mimu-text-muted mb-4">
         Esta ação irá remover todos os dados fictícios da aplicação, mantendo apenas os dados do administrador.
       </p>
       <button
         onClick={resetApplicationData}
-        className="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 transition-colors duration-200"
+        className="bg-red-600 hover:bg-red-700 text-mimu-white-text rounded px-4 py-2 transition-colors duration-200 transition-all duration-300 hover:shadow-md active:scale-95 min-h-[44px]"
       >
         Resetar Todos os Dados
       </button>

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">MIMU</string>
-    <string name="title_activity_main">MIMU</string>
+    <string name="app_name">Mimu</string>
+    <string name="title_activity_main">Mimu</string>
     <string name="package_name">com.mimu.app</string>
     <string name="custom_url_scheme">com.mimu.app</string>
 </resources>

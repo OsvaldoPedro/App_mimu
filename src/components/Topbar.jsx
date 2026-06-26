@@ -1,6 +1,7 @@
 import React from 'react';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import BackButton from './common/BackButton';
 
 /**
  * Componente Topbar responsivo para o painel administrativo
@@ -20,15 +21,18 @@ const Topbar = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="bg-white shadow-md border-b">
+    <header className="bg-mimu-white dark:bg-[#1E1E1E] shadow-md border-b">
       <div className="max-w-screen-xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-24">
           {/* Lado esquerdo - Menu hamburguer e logotipo */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* Botão de voltar global para painéis */}
+            <BackButton variant="dark" />
+            
             {/* Botão menu hamburguer - visível apenas em mobile/tablet */}
             <button
               onClick={onMenuClick}
-              className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
+              className="lg:hidden p-2 rounded-xl hover:bg-mimu-gray-100 dark:bg-[#121212] transition-colors transition-all duration-300 hover:shadow-md active:scale-95"
               aria-label="Abrir menu"
             >
               <svg
@@ -47,13 +51,8 @@ const Topbar = ({ onMenuClick }) => {
             </button>
 
             {/* Logotipo */}
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">M</span>
-              </div>
-              <span className="text-xl font-bold text-gray-800 hidden sm:block">
-                Mimu
-              </span>
+            <div className="flex items-center">
+              <img src="/mimu-logo.png" alt="Mimu Logo" className="h-[80px] w-auto object-contain" />
             </div>
           </div>
 
@@ -61,15 +60,15 @@ const Topbar = ({ onMenuClick }) => {
           <div className="flex items-center space-x-4">
             {/* Nome do administrador */}
             <div className="hidden md:block">
-              <p className="text-sm text-gray-600">Olá,</p>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm text-mimu-text-muted">Olá,</p>
+              <p className="text-sm font-medium text-mimu-text-dark dark:text-white">
                 {user?.name || 'Administrador'}
               </p>
             </div>
 
             {/* Foto de perfil (placeholder) */}
-            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-              <span className="text-gray-600 font-medium">
+            <div className="w-10 h-10 bg-mimu-gray-200 rounded-full flex items-center justify-center">
+              <span className="text-mimu-text-muted font-medium">
                 {user?.name?.charAt(0)?.toUpperCase() || 'A'}
               </span>
             </div>
@@ -77,7 +76,7 @@ const Topbar = ({ onMenuClick }) => {
             {/* Botão logout */}
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-mimu-white-text bg-red-600 rounded-xl hover:bg-red-700 transition-colors transition-all duration-300 hover:shadow-md active:scale-95 min-h-[44px]"
             >
               Sair
             </button>

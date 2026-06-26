@@ -193,7 +193,10 @@
     "clientAccount": "Compte Client",
     "clientSubtitle": "Créez votre compte pour réserver des services",
     "passwordMismatch": "Les mots de passe ne correspondent pas",
-    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères"
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+    "serviceType": "Type de Service",
+    "selectServiceType": "Sélectionnez un type de service",
+    "servicePrice": "Prix du Service (Kz)"
   },
   "company": {
     "registerTitle": "Enregistrer l'entreprise",
@@ -207,7 +210,7 @@
     "serviceTypes": "Types de services",
     "servicesOffered": "Services offerts",
     "requiredDocuments": "Documents requis",
-    "optionalDocuments": "Documents optionnels",
+    "optionalDocuments": "Documents supplémentaires",
     "workingHours": "Heures de travail",
     "password": "Mot de passe",
     "createCompanyAccount": "Créer un compte entreprise",
@@ -235,7 +238,7 @@
     "category": "Catégorie",
     "servicesOffered": "Services offerts",
     "requiredDocuments": "Documents requis",
-    "optionalDocuments": "Documents optionnels",
+    "optionalDocuments": "Documents supplémentaires",
     "hours": "Heures de service",
     "choose": "Choisir...",
     "all": "Tous"
@@ -262,10 +265,5 @@
       "reject": "Rejeter",
       "suspend": "Suspendre"
     }
-  },
-  "form": {
-    "serviceType": "Type de Service",
-    "selectServiceType": "Sélectionnez un type de service",
-    "servicePrice": "Prix du Service (Kz)"
   }
 }

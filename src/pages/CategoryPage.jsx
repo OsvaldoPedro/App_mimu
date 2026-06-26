@@ -1,110 +1,121 @@
-import { useState, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Navbar from '../components/Navbar'
 import CategoryHeader from '../components/CategoryHeader'
 import SearchAndFilter from '../components/SearchAndFilter'
 import ServiceCard from '../components/ServiceCard'
 import Footer from '../components/Footer'
-import { categories } from '../data/categories'
-import { provinces } from '../data/provinces'
+import { categories as staticCategories } from '../data/categories'
 import { getServicesByCategory } from '../data/services'
+import { useCategories } from '../hooks/useCategories'
 
 export default function CategoryPage() {
   const { categoryId } = useParams()
+  const navigate = useNavigate()
   const { t } = useTranslation()
-  const [search, setSearch] = useState('')
-  const [sortBy, setSortBy] = useState('price_asc')
+  const [allServices, setAllServices] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [visibleCount, setVisibleCount] = useState(20)
 
-  // filtro adicional
   const [selectedServiceType, setSelectedServiceType] = useState('')
   const [selectedProvince, setSelectedProvince] = useState('')
+  const [selectedCity, setSelectedCity] = useState('')
 
-  const category = categories.find(c => c.id === categoryId) || categories[0]
-  const allServices = getServicesByCategory(categoryId || category?.id)
+  const { categories } = useCategories()
+  const category = categories.find(c => c.id === categoryId) || staticCategories.find(c => c.id === categoryId) || { services: [] }
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      const data = await getServicesByCategory(categoryId || category?.id)
+      setAllServices(data)
+      setLoading(false)
+    }
+    load()
+    setVisibleCount(20)
+  }, [categoryId, category?.id])
 
   const filteredAndSorted = useMemo(() => {
     let list = allServices
 
-    // aplicar filtros tipo/província se selecionados
     if (selectedServiceType) {
       list = list.filter(s => s.type === selectedServiceType)
     }
     if (selectedProvince) {
-      list = list.filter(s => s.province === selectedProvince)
+      list = list.filter(s => s.provinceId === selectedProvince)
     }
-    
-    // Aplicar filtro de pesquisa apenas se houver texto
-    if (search.trim()) {
-      const searchLower = search.toLowerCase()
-      list = list.filter(s =>
-        (s.name && s.name.toLowerCase().includes(searchLower)) ||
-        (s.description && s.description.toLowerCase().includes(searchLower)) ||
-        (s.location && s.location.toLowerCase().includes(searchLower))
-      )
+    if (selectedCity) {
+      list = list.filter(s => s.municipalityId === selectedCity)
     }
-    
-    // Aplicar ordenação
-    if (sortBy === 'price_asc') list = [...list].sort((a, b) => (a.price || 0) - (b.price || 0))
-    if (sortBy === 'price_desc') list = [...list].sort((a, b) => (b.price || 0) - (a.price || 0))
-    if (sortBy === 'rating') list = [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0))
     
     return list
-  }, [allServices, search, sortBy, selectedServiceType, selectedProvince])
+  }, [allServices, selectedServiceType, selectedProvince, selectedCity])
 
   const categoryName = t(`category.${categoryId}`)
 
   return (
-    <div className="min-h-screen bg-[#F4E8D8]">
+    <div className="min-h-screen bg-mimu-cream dark:bg-[#121212]">
       <Navbar />
       <CategoryHeader
         categoryId={categoryId}
         title={categoryName}
-        showSearch={true}
-        search={search}
-        onSearch={setSearch}
+        showSearch={false}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">        {/* filtros por tipo e província */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">        
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <select
             value={selectedServiceType}
             onChange={e => setSelectedServiceType(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 bg-white text-[#3A0D0D]"
+            className="w-full sm:w-auto px-4 py-2 rounded-lg border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold bg-mimu-white dark:bg-[#1E1E1E] text-mimu-wine-text dark:text-white focus:outline-none"
           >
-            <option value="">Todos os serviços</option>
+            <option value="">{t('common.allServices', 'Todos os serviços')}</option>
             {category.services.map((s, i) => (
               <option key={i} value={s}>{s}</option>
             ))}
           </select>
-
-          <select
-            value={selectedProvince}
-            onChange={e => setSelectedProvince(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 bg-white text-[#3A0D0D]"
-          >
-            <option value="">Todas as províncias</option>
-            {provinces.map((p, i) => (
-              <option key={i} value={p}>{p}</option>
-            ))}
-          </select>
         </div>
-        <SearchAndFilter search={search} onSearch={setSearch} sortBy={sortBy} onSortBy={setSortBy} />
+        <SearchAndFilter 
+          selectedCategories={[categoryId]}
+          onCategoryToggle={(val) => {
+             if(val && val !== categoryId) navigate(`/categoria/${val}`, { replace: true })
+             else if(!val) navigate(`/servicos`, { replace: true })
+          }}
+          province={selectedProvince} onProvinceChange={p => { setSelectedProvince(p); setSelectedCity(''); }}
+          city={selectedCity} onCityChange={setSelectedCity}
+        />
 
-        <p className="mt-4 text-[#5C1A1A]/80">
-          {t('listing.results', { count: filteredAndSorted.length })}
+        <p className="mt-4 text-mimu-wine-light-text dark:text-gray-300/80">
+          {loading ? t('common.searchServices', 'A carregar serviços...') : t('listing.results', { count: filteredAndSorted.length })}
         </p>
 
-        {filteredAndSorted.length === 0 ? (
+        {loading ? (
+             <div className="py-20 flex justify-center items-center">
+               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-mimu-gold"></div>
+             </div>
+        ) : filteredAndSorted.length === 0 ? (
           <div className="py-20 text-center">
-            <p className="text-xl text-[#5C1A1A]/80">{t('listing.noResults')}</p>
+            <p className="text-xl text-mimu-wine-light-text dark:text-gray-300/80">{t('listing.noResults')}</p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mt-6">
-            {filteredAndSorted.map((service) => (
-              <ServiceCard key={service.id} service={service} />
-            ))}
-          </div>
+          <>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mt-6">
+              {filteredAndSorted.slice(0, visibleCount).map((service) => (
+                <ServiceCard key={service.id} service={service} />
+              ))}
+            </div>
+            {visibleCount < filteredAndSorted.length && (
+              <div className="mt-10 flex justify-center">
+                <button 
+                  onClick={() => setVisibleCount(c => c + 20)}
+                  className="px-8 py-3 bg-mimu-gold hover:bg-mimu-gold-hover text-mimu-wine-text dark:text-white font-bold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
+                >
+                  {t('common.loadMore', 'Carregar Mais')}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </main>
 

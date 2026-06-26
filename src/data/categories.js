@@ -6,6 +6,7 @@ export const categories = [
     color: 'blue',
     bgClass: 'bg-blue-900/90',
     textClass: 'text-blue-100',
+    imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&q=80',
     services: [
       'Hotéis',
       'Alojamento local',
@@ -23,12 +24,15 @@ export const categories = [
     color: 'orange',
     bgClass: 'bg-orange-600/90',
     textClass: 'text-orange-100',
+    imageUrl: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500&q=80',
     services: [
       'Restaurantes',
       'Takeaway / Delivery',
       'Bares & Lounge',
       'Catering',
-      'Reservas de Mesa'
+      'Reservas de Mesa',
+      'Confeitaria',
+      'Hamburgaria'
     ]
   },
   {
@@ -38,6 +42,7 @@ export const categories = [
     color: 'yellow',
     bgClass: 'bg-yellow-500/90',
     textClass: 'text-yellow-800',
+    imageUrl: 'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=500&q=80',
     services: [
       'Salões de Eventos',
       'DJs',
@@ -55,6 +60,7 @@ export const categories = [
     color: 'green',
     bgClass: 'bg-green-600/90',
     textClass: 'text-green-100',
+    imageUrl: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=500&q=80',
     services: [
       'Táxi',
       'Rent-a-car',
@@ -73,6 +79,7 @@ export const categories = [
     color: 'lilac',
     bgClass: 'bg-violet-600/90',
     textClass: 'text-violet-100',
+    imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=500&q=80',
     services: [
       'Cabeleireiros',
       'Barbearias',
@@ -82,7 +89,12 @@ export const categories = [
       'Clínicas',
       'Profissionais de Saúde',
       'Personal Trainer',
-      'Postos médicos'
+      'Postos médicos',
+      'Enfermagem ao Domicilio',
+      'Nutricionista ao Domicilio',
+      'Personal Trainer ao Domicilio',
+      'Massagem ao Domicicilio',
+      'Psicologo/Psicologa'
     ]
   },
   {
@@ -92,6 +104,7 @@ export const categories = [
     color: 'gray',
     bgClass: 'bg-gray-700/90',
     textClass: 'text-gray-100',
+    imageUrl: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=500&q=80',
     services: [
       'Canalizador',
       'Electricista',
@@ -102,7 +115,12 @@ export const categories = [
       'Assistência técnica',
       'Técnicos de Frio / Ar Condicionado',
       'Construção',
-      'Empregadas Domésticas'
+      'Empregadas Domésticas',
+      'Lavandaria',
+      'Engormaria',
+      'Lavagem de roupa',
+      'Pintura/Pintor',
+      'Pedreiro'
     ]
   },
   {
@@ -112,6 +130,7 @@ export const categories = [
     color: 'slate',
     bgClass: 'bg-slate-300/90',
     textClass: 'text-slate-800',
+    imageUrl: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=500&q=80',
     services: [
       'Mecânica Rápida',
       'Lavagem de Viaturas',
@@ -128,6 +147,7 @@ export const categories = [
     color: 'amber',
     bgClass: 'bg-amber-400/90',
     textClass: 'text-amber-900',
+    imageUrl: 'https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=500&q=80',
     services: [
       'Motoboys',
       'Entrega de Documentos',
@@ -142,6 +162,7 @@ export const categories = [
     color: 'red',
     bgClass: 'bg-red-400/90',
     textClass: 'text-red-900',
+    imageUrl: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80',
     services: [
       'Advogados',
       'Contabilistas',
@@ -160,12 +181,18 @@ export const categories = [
     color: 'sky',
     bgClass: 'bg-sky-200/90',
     textClass: 'text-sky-800',
+    imageUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=500&q=80',
     services: [
       'Explicadores',
       'Cursos Livres',
       'Formação Profissional',
       'Workshops',
-      'Formadores'
+      'Formadores',
+      'Aulas de dança',
+      'Aulas de Inglês',
+      'Aulas de Matemática',
+      'Aulas de Física',
+      'Aulas de Estatística'
     ]
   }
 ]

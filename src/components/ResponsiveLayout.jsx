@@ -13,7 +13,7 @@ const ResponsiveLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mimu-gray-50 dark:bg-[#121212]">
       {/* Topbar sempre visível */}
       <Topbar onMenuClick={() => setSidebarOpen(true)} />
 

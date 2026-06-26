@@ -1,86 +1,151 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
+import { enforceNumeric, enforceAlphaText, isValidEmail } from '../utils/validation'
+import { toast } from 'react-hot-toast'
+
 export default function RegisterClientPage() {
   const { t } = useTranslation()
   const [form, setForm] = useState({
-    name: '', phone: '', email: '', password: '', confirmPassword: ''
+    name: '', email: '', phone: '', password: '', confirmPassword: ''
   })
+  
   const [error, setError] = useState('')
-  const { registerClient } = useAuth()
+  const [loading, setLoading] = useState(false)
+  
+  const { registerClient, user } = useAuth()
   const navigate = useNavigate()
 
+  useEffect(() => {
+    if (user) {
+      const target = user.role === 'company' ? '/empresa' : user.role === 'provider' ? '/prestador' : user.role === 'admin' ? '/admin' : '/painel'
+      navigate(target, { replace: true })
+    }
+  }, [user, navigate])
+
   const handleChange = (e) => {
-    const { name, value } = e.target
+    let { name, value } = e.target
+    
+    if (name === 'phone') {
+      value = enforceNumeric(value).substring(0, 9)
+    }
+    if (name === 'name') {
+      value = enforceAlphaText(value)
+    }
+    
     setForm(f => ({ ...f, [name]: value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault()
     setError('')
-    if (form.password !== form.confirmPassword) {
-      setError(t('form.passwordMismatch'))
+    
+    if (form.name.trim().length < 2) {
+      setError(t('register.invalidName', 'Por favor, insira um nome válido (apenas letras).'))
       return
     }
+
+    const cleanPhone = form.email.replace(/\D/g, '');
+    const isPhone = !form.email.includes('@') && cleanPhone.length === 9;
+    const isEmail = isValidEmail(form.email);
+    
+    if (!isEmail && !isPhone) {
+      setError(t('register.invalidEmailPhone', 'Por favor, insira um e-mail válido ou um número de telefone com 9 dígitos.'))
+      return
+    }
+
+
+
     if (form.password.length < 6) {
-      setError(t('form.passwordTooShort'))
+      setError(t('auth.passwordLengthError', 'A palavra-passe deve ter pelo menos 6 caracteres.'))
       return
     }
-    const result = registerClient({
+
+    if (form.password !== form.confirmPassword) {
+      setError(t('auth.passwordMismatchError', 'As palavras-passe não coincidem.'))
+      return
+    }
+
+    setLoading(true)
+    
+    const result = await registerClient({
       name: form.name,
-      phone: form.phone,
       email: form.email,
+      phone: isPhone ? cleanPhone : form.phone,
       password: form.password
     })
-    if (result.success) navigate('/painel')
-    else setError(result.error)
+    
+    setLoading(false)
+
+    if (result.success) {
+      if (result.requireEmailConfirmation) {
+        toast.success(t('register.emailConfirmationSent', 'Envio de email de confirmação! Verifique a sua caixa de entrada.'))
+        navigate('/verificar-otp', { state: { email: form.email } });
+      } else {
+        // Fallback: Se o Supabase por algum motivo retornar que o email não precisa de confirmação
+        // Vamos forçar a navegação para que o utilizador não fique preso!
+        toast.success(t('register.accountCreatedSuccess', 'Conta criada com sucesso! Bem-vindo(a).'))
+        const target = user?.role === 'company' ? '/empresa' : user?.role === 'provider' ? '/prestador' : user?.role === 'admin' ? '/admin' : '/painel'
+        navigate(target, { replace: true })
+      }
+    } else {
+      setError(result.error)
+    }
   }
 
+
+
   return (
-    <div className="min-h-screen bg-[#F4E8D8]">
+    <div className="min-h-screen bg-mimu-cream dark:bg-[#121212]">
       <Navbar />
       <main className="pt-24 pb-16 px-4">
-        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8">
-          <Link to="/registar" className="text-[#C58A2B] text-sm font-medium mb-4 inline-block">← {t('form.back')}</Link>
-          <h1 className="text-2xl font-bold text-[#3A0D0D] mb-2">{t('form.clientAccount')}</h1>
-          <p className="text-[#5C1A1A]/80 mb-6">{t('form.clientSubtitle')}</p>
+        <div className="max-w-md mx-auto bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl shadow-xl p-4 md:p-8">
+          <h1 className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white mb-2">{t('register.clientAccount', 'Conta Cliente')}</h1>
+          <p className="text-mimu-wine-light-text dark:text-gray-300/80 mb-6">
+            {t('register.clientSubtitle', 'Crie a sua conta para começar a reservar.')}
+          </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && <div className="p-3 bg-red-100 text-red-700 rounded-xl text-sm">{error}</div>}
+          {error && <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-xl text-sm">{error}</div>}
+
+          <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">{t('form.name')}</label>
+              <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('register.name', 'Nome Completo')}</label>
               <input name="name" value={form.name} onChange={handleChange} required
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none" />
+                className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">{t('form.phone')}</label>
-              <input name="phone" value={form.phone} onChange={handleChange} required
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none" />
+              <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('auth.emailPhoneLabel', 'E-mail / Telefone')}</label>
+              <input name="email" type="text" value={form.email} onChange={handleChange} required placeholder={t('auth.emailPhonePlaceholder', 'Digite seu e-mail ou telefone')}
+                className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('auth.passwordLabel', 'Palavra-passe')}</label>
+              <input name="password" type="password" placeholder={t('auth.passwordPlaceholder', '••••••••')} value={form.password} onChange={handleChange} required
+                className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">{t('form.emailOptional')}</label>
-              <input name="email" type="email" value={form.email} onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none" />
+              <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('register.confirmPassword', 'Confirmar palavra-passe')}</label>
+              <input name="confirmPassword" type="password" placeholder={t('auth.passwordPlaceholder', '••••••••')} value={form.confirmPassword} onChange={handleChange} required
+                className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">{t('form.password')}</label>
-              <input name="password" type="password" value={form.password} onChange={handleChange} required
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">{t('form.confirmPassword')}</label>
-              <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} required
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none" />
-            </div>
-            <button type="submit"
-              className="w-full py-4 bg-[#C58A2B] hover:bg-[#E0B15C] text-[#3A0D0D] font-bold rounded-xl transition-colors">
-              {t('auth.createAccount')}
+
+            <p className="text-xs text-mimu-wine-light-text dark:text-gray-300/80 mt-4 mb-4">
+              {t('register.termsConsent', 'Ao criar a sua conta, está a consentir com os nossos')}{' '}
+              <Link to="/termos-de-uso" className="text-mimu-gold hover:underline font-semibold" target="_blank">{t('register.termsOfUse', 'Termos de Uso')}</Link> {t('register.and', 'e')}{' '}
+              <Link to="/politica-privacidade" className="text-mimu-gold hover:underline font-semibold" target="_blank">{t('register.privacyPolicy', 'Política de Privacidade')}</Link>.
+            </p>
+
+            <button type="submit" disabled={loading}
+              className="w-full py-4 bg-mimu-gold hover:bg-mimu-gold-hover text-mimu-wine-text dark:text-white font-bold rounded-xl transition-colors disabled:opacity-50 transition-all duration-300 hover:shadow-md active:scale-95">
+              {loading ? t('register.creatingAccount', 'A criar conta...') : t('register.createAccountBtn', 'Criar Conta')}
             </button>
           </form>
+
         </div>
       </main>
       <Footer />

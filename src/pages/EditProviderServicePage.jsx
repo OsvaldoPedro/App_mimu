@@ -1,9 +1,8 @@
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useServices } from '../context/ServicesContext'
 import { getServiceById } from '../data/services'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
 import ServiceForm from '../components/ServiceForm'
 
 export default function EditProviderServicePage() {
@@ -12,23 +11,42 @@ export default function EditProviderServicePage() {
   const { user, isProvider } = useAuth()
   const { updateProviderService } = useServices()
 
-  const service = getServiceById(serviceId, { publicOnly: false })
+  const [service, setService] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      const data = await getServiceById(serviceId, { publicOnly: false })
+      setService(data)
+      setLoading(false)
+    }
+    load()
+  }, [serviceId])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-mimu-cream dark:bg-[#121212] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-mimu-gold"></div>
+      </div>
+    )
+  }
+
   const isOwnService = service && service.providerId === user?.id
 
   if (!user || !isProvider) {
     return (
-      <div className="min-h-screen bg-[#F4E8D8] flex items-center justify-center">
-        <p className="text-[#5C1A1A]">Apenas prestadores podem editar serviços.</p>
-        <Link to="/" className="ml-4 text-[#C58A2B]">Voltar</Link>
+      <div className="min-h-screen bg-mimu-cream dark:bg-[#121212] flex items-center justify-center">
+        <p className="text-mimu-wine-light-text dark:text-gray-300">Apenas prestadores podem editar serviços.</p>
+        <Link to="/" className="ml-4 text-mimu-gold">Voltar</Link>
       </div>
     )
   }
 
   if (!service || !isOwnService) {
     return (
-      <div className="min-h-screen bg-[#F4E8D8] flex items-center justify-center">
-        <p className="text-[#5C1A1A]">Serviço não encontrado ou não tem permissão para editar.</p>
-        <Link to="/prestador/servicos" className="ml-4 text-[#C58A2B]">Meus serviços</Link>
+      <div className="min-h-screen bg-mimu-cream dark:bg-[#121212] flex items-center justify-center">
+        <p className="text-mimu-wine-light-text dark:text-gray-300">Serviço não encontrado ou não tem permissão para editar.</p>
+        <Link to="/prestador/servicos" className="ml-4 text-mimu-gold">Meus serviços</Link>
       </div>
     )
   }
@@ -43,15 +61,12 @@ export default function EditProviderServicePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4E8D8]">
-      <Navbar />
-      <main className="pt-24 pb-16 px-4">
-        <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8">
-          <Link to="/prestador/servicos" className="text-[#C58A2B] text-sm font-medium mb-4 inline-block">
+        <div className="max-w-2xl mx-auto bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl shadow-xl p-4 md:p-8 w-full">
+          <Link to="/prestador/servicos" className="text-mimu-gold text-sm font-medium mb-4 inline-block">
             ← Meus serviços
           </Link>
-          <h1 className="text-2xl font-bold text-[#3A0D0D] mb-2">Editar serviço</h1>
-          <p className="text-[#5C1A1A]/80 mb-6">{service.name}</p>
+          <h1 className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white mb-2">Editar serviço</h1>
+          <p className="text-mimu-wine-light-text dark:text-gray-300/80 mb-6">{service.name}</p>
           <ServiceForm
             initialService={service}
             onSubmit={handleSubmit}
@@ -59,9 +74,5 @@ export default function EditProviderServicePage() {
             onCancel={() => navigate('/prestador/servicos')}
           />
         </div>
-      </main>
-      <Footer />
-    </div>
   )
 }
-

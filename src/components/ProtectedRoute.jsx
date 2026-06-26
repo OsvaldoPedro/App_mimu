@@ -5,52 +5,66 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   const { user } = useAuth()
   const location = useLocation()
 
-  // unauthenticated → send to login, remember where they came from
+  // 1. Unauthenticated -> send to login
   if (!user) {
     return <Navigate to="/entrar" state={{ from: location }} replace />
   }
 
-  // if the account is pending approval and the route requires that role,
-  // show a friendly message instead of silently redirecting
-  if (allowedRoles?.includes('company') && user.role === 'company' && user.status !== 'active') {
-    return (
-      <div className="min-h-screen bg-[#F4E8D8] flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-          <h1 className="text-xl font-bold text-[#3A0D0D] mb-2">Conta pendente</h1>
-          <p className="text-[#5C1A1A]/80">
-            A tua conta empresarial está <strong>pendente de aprovação</strong> pelo Administrador.
-          </p>
-          <p className="text-amber-700 text-sm mt-3">Assim que for aprovada, terás acesso ao painel.</p>
-          <a href="/" className="inline-block mt-6 px-6 py-3 bg-[#C58A2B] text-[#3A0D0D] font-bold rounded-xl hover:bg-[#b87d26]">
-            Voltar ao site
-          </a>
+  // 2. Handle Pending / Rejected status
+  // Allow admins to always pass (their status should be approved anyway)
+  if (user.role !== 'admin') {
+    if (user.status === 'pending_approval' && location.pathname !== '/perfil') {
+      return (
+        <div className="min-h-screen bg-mimu-cream dark:bg-[#121212] flex items-center justify-center px-4">
+          <div className="max-w-md w-full bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl shadow-xl p-4 md:p-8 text-center">
+            <h1 className="text-xl font-bold text-mimu-wine-text dark:text-white mb-2">Conta em análise</h1>
+            <p className="text-mimu-wine-light-text dark:text-gray-300/80">
+              A tua conta está <strong>pendente de aprovação</strong> pelo Administrador.
+            </p>
+            <p className="text-amber-700 text-sm mt-3">Assim que for aprovada, terás acesso total ao sistema.</p>
+            <a href="/" className="inline-block mt-6 px-6 py-3 bg-mimu-gold text-mimu-wine-text dark:text-white font-bold rounded-xl hover:bg-[#b87d26]">
+              Voltar à página inicial
+            </a>
+          </div>
         </div>
-      </div>
-    )
-  }
-  if (allowedRoles?.includes('provider') && user.role === 'provider' && user.status !== 'active') {
-    return (
-      <div className="min-h-screen bg-[#F4E8D8] flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-          <h1 className="text-xl font-bold text-[#3A0D0D] mb-2">Conta pendente</h1>
-          <p className="text-[#5C1A1A]/80">
-            A tua conta de prestador está <strong>pendente de aprovação</strong> pelo Administrador.
-          </p>
-          <p className="text-amber-700 text-sm mt-3">Assim que for aprovada, terás acesso ao painel.</p>
-          <a href="/" className="inline-block mt-6 px-6 py-3 bg-[#C58A2B] text-[#3A0D0D] font-bold rounded-xl hover:bg-[#b87d26]">
-            Voltar ao site
-          </a>
+      )
+    }
+
+    if (user.status === 'rejected') {
+      return (
+        <div className="min-h-screen bg-mimu-cream dark:bg-[#121212] flex items-center justify-center px-4">
+          <div className="max-w-md w-full bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl shadow-xl p-4 md:p-8 text-center">
+            <h1 className="text-xl font-bold text-red-600 mb-2">Conta rejeitada</h1>
+            <p className="text-mimu-wine-light-text dark:text-gray-300/80">
+              Infelizmente, a tua conta <strong>não foi aprovada</strong>.
+            </p>
+            <p className="text-red-700 text-sm mt-3">Para mais informações, por favor contacta o suporte.</p>
+            <a href="/" className="inline-block mt-6 px-6 py-3 bg-red-600 text-mimu-white-text font-bold rounded-xl hover:bg-red-700">
+              Sair
+            </a>
+          </div>
         </div>
-      </div>
-    )
+      )
+    }
   }
 
-  // enforce allowed roles if provided; otherwise treat as public
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // unauthorized access: send user home instead of guessing their panel
-    return <Navigate to="/" replace />
+  // 3. Enforce Role restrictions (e.g. /admin requires 'admin')
+  if (allowedRoles) {
+    const userRole = user.role ? user.role.trim().toLowerCase() : '';
+    const normalizedAllowedRoles = allowedRoles.map(r => r.trim().toLowerCase());
+    
+    // Expand allowed roles to include translations so we don't kick out users with localized roles
+    const expandedAllowedRoles = new Set(normalizedAllowedRoles);
+    if (expandedAllowedRoles.has('provider')) expandedAllowedRoles.add('prestador');
+    if (expandedAllowedRoles.has('company')) expandedAllowedRoles.add('empresa');
+    if (expandedAllowedRoles.has('client')) expandedAllowedRoles.add('cliente');
+    if (expandedAllowedRoles.has('admin')) expandedAllowedRoles.add('administrador');
+
+    if (!expandedAllowedRoles.has(userRole)) {
+      return <Navigate to="/" replace />
+    }
   }
 
-  // finally, allow the wrapped element to render
+  // 4. Authorized
   return children
 }

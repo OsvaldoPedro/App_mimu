@@ -18,11 +18,9 @@ export const storage = {
 }
 
 export const KEYS = {
-  USER: 'user',
-  USERS: 'users',
+  PROFILES: 'profiles', // Users, Companies, Providers
+  SERVICES: 'services', // All services
   ORDERS: 'orders',
-  PROVIDER_SERVICES: 'provider_services',
-  COMPANY_SERVICES: 'company_services',
   NOTIFICATIONS: 'notifications',
   RESET_TOKENS: 'reset_tokens'
 }

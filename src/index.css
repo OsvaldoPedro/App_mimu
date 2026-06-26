@@ -1,16 +1,27 @@
 @import "tailwindcss";
-
-/* Mimu - Paleta de cores premium */
+@custom-variant dark (&:where(.dark, .dark *));
 @theme {
-  /* Vinho escuro principal */
-  --color-mimu-wine: #3A0D0D;
-  --color-mimu-wine-light: #5C1A1A;
-  /* Dourado */
-  --color-mimu-gold: #C58A2B;
-  --color-mimu-gold-hover: #E0B15C;
-  /* Creme e branco */
-  --color-mimu-cream: #F4E8D8;
-  --color-mimu-white: #FFFFFF;
+  --color-mimu-wine: var(--color-wine);
+  --color-mimu-wine-text: var(--color-wine-text);
+  --color-mimu-wine-light: var(--color-wine-light);
+  --color-mimu-wine-light-text: var(--color-wine-light-text);
+  --color-mimu-cream: var(--color-cream);
+  --color-mimu-cream-text: var(--color-cream-text);
+  --color-mimu-cream-border: var(--color-cream-border);
+  --color-mimu-white: var(--color-white);
+  --color-mimu-white-text: var(--color-white-text);
+  --color-mimu-white-border: var(--color-white-border);
+  --color-mimu-cream-soft: var(--color-cream-soft);
+  --color-mimu-gray-50: var(--color-gray-50);
+  --color-mimu-gray-100: var(--color-gray-100);
+  --color-mimu-gray-200: var(--color-gray-200);
+  --color-mimu-gray-800: var(--color-gray-800);
+  --color-mimu-gray-900: var(--color-gray-900);
+  --color-mimu-text-dark: var(--color-text-dark);
+  --color-mimu-text-muted: var(--color-text-muted);
+  --color-mimu-border-light: var(--color-border-light);
+  --color-mimu-gold: var(--color-gold);
+  --color-mimu-gold-hover: var(--color-gold-hover);
 }
 
 @layer base {
@@ -20,5 +31,155 @@
   }
   body {
     @apply antialiased;
+  }
+}
+
+:root, body.light {
+  /* Original Wine: #3A0D0D. Slightly more vivid: #481010 */
+  --color-wine: #481010; 
+  --color-wine-text: #481010;
+  
+  /* Original Wine Light: #5C1A1A. Slightly more vivid: #6E1E1E */
+  --color-wine-light: #6E1E1E;
+  --color-wine-light-text: #6E1E1E;
+  
+  /* Original Cream: #F4E8D8. Slightly more vivid/cleaner: #F7ECD5 */
+  --color-cream: #F7ECD5;
+  --color-cream-text: #F7ECD5;
+  --color-cream-border: #F7ECD5;
+  --color-cream-soft: #FDF9F1;
+  
+  /* Original Gold: #C58A2B. Slightly more vivid: #CF922E */
+  --color-gold: #CF922E;
+  /* Original Gold Hover: #E0B15C. Slightly more vivid: #EBB65E */
+  --color-gold-hover: #EBB65E;
+
+  --color-white: #FFFFFF;
+  --color-white-text: #FFFFFF;
+  --color-white-border: #FFFFFF;
+
+  --color-gray-50: #F9FAFB;
+  --color-gray-100: #F3F4F6;
+  --color-gray-200: #E5E7EB;
+  --color-gray-800: #1F2937;
+  --color-gray-900: #111827;
+  --color-text-dark: #000000; 
+  --color-text-muted: #4B5563; 
+  --color-border-light: #E5E7EB;
+  
+  background-color: var(--color-cream);
+  color: var(--color-wine-text);
+}
+
+body.dark {
+  /* Global Background */
+  --color-cream: #121212;
+  --color-cream-soft: #121212;
+  --color-cream-border: #2A2A2A;
+  
+  /* Header / Navbar / Footer / Sidebar */
+  --color-wine: #000000;
+  --color-wine-light: #121212;
+  
+  /* Highlight Color */
+  --color-gold: #FFD166;
+  --color-gold-hover: #EBB65E;
+  
+  /* Text Colors */
+  --color-wine-text: #FFFFFF;
+  --color-wine-light-text: #FFFFFF;
+  --color-cream-text: #FFFFFF;
+  --color-text-dark: #FFFFFF;
+  --color-text-muted: #B3B3B3;
+  
+  --color-border-light: #2A2A2A;
+  
+  background-color: #121212;
+  color: #FFFFFF;
+}
+
+body.light {
+  background-color: var(--color-cream);
+  color: var(--color-text-dark);
+}
+
+/* Force Dark Mode Overrides for Inputs & Forms */
+body.dark input, 
+body.dark select, 
+body.dark textarea {
+  background-color: #1E1E1E !important;
+  border-color: #2A2A2A !important;
+  color: #FFFFFF !important;
+}
+
+body.dark input:focus, 
+body.dark select:focus, 
+body.dark textarea:focus {
+  border-color: #FFD166 !important;
+  outline: none;
+  box-shadow: 0 0 0 1px #FFD166 !important;
+}
+
+body.dark input::placeholder, 
+body.dark textarea::placeholder {
+  color: #777777 !important;
+}
+
+/* Image Overlay Treatment in Dark Mode */
+body.dark img {
+  filter: brightness(0.8) contrast(1.1);
+}
+
+/* Cards & Modals */
+.dark .card, .dark .modal-content {
+  background-color: #1E1E1E !important;
+  border-color: #2A2A2A !important;
+}
+
+/* Splash Screen custom animations */
+@keyframes fade-in-slow {
+  0% { opacity: 0; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scale-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.02); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-fade-in-slow {
+  animation: fade-in-slow 1s ease both;
+}
+
+.animate-scale-float {
+  animation: scale-float 2.4s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 1.8s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.light .card {
+  background: #f1f5f9;
+}
+
+/* Visibilidade robusta para mobile/desktop */
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
   }
 }

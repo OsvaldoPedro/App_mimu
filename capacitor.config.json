@@ -1,5 +1,11 @@
 {
   "appId": "com.mimu.app",
-  "appName": "MIMU",
-  "webDir": "dist"
+  "appName": "Mimu",
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0,
+      "backgroundColor": "#ffffffff"
+    }
+  }
 }

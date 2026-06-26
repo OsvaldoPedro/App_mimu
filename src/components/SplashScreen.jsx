@@ -1,46 +1,27 @@
-import { useNetwork } from '../context/NetworkContext'
-import { useTranslation } from 'react-i18next'
-
-export default function SplashScreen() {
-  const { online, checking, error, retry } = useNetwork()
-  const { t } = useTranslation()
-
-  const showError = !checking && !online
+export default function SplashScreen({
+  statusMessage = 'Carregando a aplicação...',
+  errorMessage = '',
+  isFadingOut = false
+}) {
 
   return (
-    <div className="min-h-screen bg-[#3A0D0D] flex items-center justify-center px-4">
-      <div className="max-w-sm w-full bg-white/95 rounded-3xl shadow-2xl p-8 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#C58A2B] flex items-center justify-center text-2xl font-bold text-[#3A0D0D]">
-          M
-        </div>
-        <h1 className="text-xl font-bold text-[#3A0D0D] mb-2">{t('brand.name')}</h1>
-        <p className="text-sm text-[#5C1A1A]/80 mb-6">
-          {t('splash.preparing')}
-        </p>
+    <div className={`min-h-screen w-full flex flex-col items-center justify-center bg-[#6F0E0E] text-[#333] p-4 transition-opacity duration-300 ease-in-out ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
+      <div className="w-full flex flex-col items-center justify-center gap-4 animate-fade-in-slow" style={{ paddingTop: '6vh' }}>
+        <img
+          src="/mimu-logo.png"
+          alt="Mimu logo"
+          className="w-[70vw] max-w-[350px] h-auto object-contain"
+          loading="lazy"
+        />
 
-        {checking && (
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-4 border-[#F4E8D8] border-t-[#C58A2B] rounded-full animate-spin" />
-            <p className="text-xs text-[#5C1A1A]/70">
-              {t('splash.checking')}
-            </p>
-          </div>
-        )}
+        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-[5px] border-[#A24242] border-t-mimu-gold animate-spin my-4"></div>
 
-        {showError && (
-          <div className="space-y-4">
-            <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-2xl px-4 py-3">
-              {error || t('splash.noConnection')}
-            </p>
-            <button
-              type="button"
-              onClick={retry}
-              className="w-full py-3 rounded-2xl bg-[#C58A2B] text-[#3A0D0D] font-semibold hover:bg-[#E0B15C] transition-colors"
-            >
-              {t('splash.retry')}
-            </button>
-          </div>
-        )}
+        <p className="text-base text-white">Carregando a aplicação...</p>
+
+        {statusMessage && statusMessage !== 'Carregando a aplicação...' ? (
+          <p className="text-xs text-white/90 text-center">{statusMessage}</p>
+        ) : null}
+        {errorMessage ? <p className="text-xs text-rose-200 text-center">{errorMessage}</p> : null}
       </div>
     </div>
   )

@@ -1,0 +1,19 @@
+[functions.send-sms]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/send-sms/index.ts"
+
+[functions.mkt360-api]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/mkt360-api/index.ts"
+
+[functions.mkt360-webhook]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/mkt360-webhook/index.ts"
+
+[functions.appy-pay-webhook]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/appy-pay-webhook/index.ts"

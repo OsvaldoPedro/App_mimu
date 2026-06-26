@@ -1,52 +1,43 @@
-import { useState, useEffect } from 'react'
-import AdminSidebar from '../../components/AdminSidebar'
-import { storage, KEYS } from '../../utils/storage'
 import { updateOrderStatus } from '../../hooks/useOrders'
+import { useAllOrders } from '../../hooks/useAdmin'
 
 export default function AdminOrders() {
-  const [orders, setOrders] = useState([])
+  const { orders, reload, loading, hasMore, loadMore } = useAllOrders()
 
-  useEffect(() => {
-    const ords = storage.get(KEYS.ORDERS, [])
-    setOrders(ords)
-  }, [])
-
-  const changeStatus = (id, status) => {
-    updateOrderStatus(id, status)
-    setOrders(ords => ords.map(o => o.id === id ? { ...o, status } : o))
+  const changeStatus = async (id, status) => {
+    await updateOrderStatus(id, status)
+    reload()
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[#F4E8D8]">
-      <AdminSidebar />
-      <div className="flex-1 p-4 sm:p-6 md:p-8 w-full">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#3A0D0D] mb-6 md:mb-8">Pedidos / Reservas</h1>
+    <div className="w-full">
+        <h1 className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-wine-text dark:text-white mb-6 md:mb-8">Pedidos / Reservas</h1>
 
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+        <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300">
           <div className="space-y-4">
             {orders.map((order) => (
               <div key={order.id} className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-semibold text-[#3A0D0D]">{order.serviceName}</h3>
+                  <h3 className="text-lg font-semibold text-mimu-wine-text dark:text-white">{order.serviceName}</h3>
                   <span className={`px-2 py-1 rounded text-sm ${
                     order.status === 'concluido' ? 'bg-green-100 text-green-800' :
                     order.status === 'pendente' ? 'bg-amber-100 text-amber-800' :
-                    order.status === 'confirmado' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-800'
+                    order.status === 'confirmado' ? 'bg-mimu-gold/20 text-mimu-gold' :
+                    'bg-mimu-gray-100 dark:bg-[#121212] text-mimu-text-dark dark:text-white'
                   }`}>
                     {order.status}
                   </span>
                 </div>
-                <p className="text-sm text-[#5C1A1A]/80">Cliente: {order.clientName}</p>
-                <p className="text-sm text-[#5C1A1A]/80">Prestador/Empresa: {order.providerName || 'N/A'}</p>
-                <p className="text-sm text-[#5C1A1A]/80">Valor: {order.total} Kz</p>
+                <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">Cliente: {order.clientName}</p>
+                <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">Prestador/Empresa: {order.providerName || 'N/A'}</p>
+                <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">Valor: {order.total} Kz</p>
                 <div className="mt-4 space-x-2">
                   {['pendente', 'confirmado', 'concluido', 'cancelado'].map((status) => (
                     <button
                       key={status}
                       onClick={() => changeStatus(order.id, status)}
                       className={`px-3 py-1 text-sm rounded ${
-                        order.status === status ? 'bg-[#C58A2B] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        order.status === status ? 'bg-mimu-gold text-mimu-white-text' : 'bg-mimu-gray-200 text-mimu-text-dark dark:text-white hover:bg-mimu-gray-200'
                       }`}
                     >
                       {status}
@@ -56,8 +47,19 @@ export default function AdminOrders() {
               </div>
             ))}
           </div>
+
+          {loading && <p className="text-mimu-wine-text dark:text-white mt-4">A carregar...</p>}
+          {!loading && hasMore && orders.length > 0 && (
+            <div className="mt-8 flex justify-center">
+              <button 
+                onClick={loadMore} 
+                className="px-6 py-2 bg-mimu-gold hover:bg-mimu-gold-hover text-mimu-wine-text dark:text-white font-bold rounded-lg transition-colors shadow-sm"
+              >
+                Carregar Mais Pedidos
+              </button>
+            </div>
+          )}
         </div>
-      </div>
     </div>
   )
 }

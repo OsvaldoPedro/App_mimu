@@ -1,67 +1,61 @@
 import { Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 
 export default function Footer() {
-  const { t } = useTranslation()
-
-  const categoryLinks = [
-    { id: 'estadia', name: t('category.estadia') },
-    { id: 'comer', name: t('category.comer') },
-    { id: 'mobilidade', name: t('category.mobilidade') },
-    { id: 'beleza', name: t('category.beleza') },
-    { id: 'casa', name: t('category.casa') }
-  ]
+  const currentYear = new Date().getFullYear()
 
   return (
-    <footer id="contacto" className="bg-[#3A0D0D] text-[#FFFFFF]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
-          <div className="lg:col-span-1">
-            <h3 className="text-2xl font-bold text-[#FFFFFF] mb-4">{t('brand.name')}</h3>
-            <p className="text-[#F4E8D8]/80 text-sm mb-4">
-              {t('brand.tagline')}
-            </p>
-            <p className="text-[#C58A2B] text-sm font-medium">
-              {t('footer.identity')} ✨
+    <footer className="hidden md:block bg-mimu-white dark:bg-[#1E1E1E] border-t border-mimu-cream-border dark:border-[#2A2A2A] pt-10 pb-24 md:pb-10 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          {/* Brand/About */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
+            <h3 className="text-xl font-bold text-mimu-wine dark:text-white mb-3">Mimu</h3>
+            <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80 max-w-xs">
+              A tua plataforma de reservas e serviços em Angola. Conectamos quem precisa com quem sabe fazer.
             </p>
           </div>
 
-          <div>
-            <h4 className="font-semibold text-[#C58A2B] mb-4">{t('nav.categories')}</h4>
+          {/* Quick Links */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
+            <h4 className="text-sm font-bold text-mimu-wine-text dark:text-white mb-4 uppercase tracking-wider">A Plataforma</h4>
             <ul className="space-y-2">
-              {categoryLinks.map((cat) => (
-                <li key={cat.id}>
-                  <Link to={`/categoria/${cat.id}`} className="text-[#F4E8D8]/80 hover:text-[#C58A2B] transition-colors text-sm">
-                    {cat.name}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link to="/sobre-mimu" className="text-sm text-mimu-wine-light-text dark:text-gray-300/80 hover:text-mimu-gold transition-colors">
+                  Sobre o Mimu
+                </Link>
+              </li>
+              <li>
+                <Link to="/suporte" className="text-sm text-mimu-wine-light-text dark:text-gray-300/80 hover:text-mimu-gold transition-colors">
+                  Ajuda e Suporte
+                </Link>
+              </li>
             </ul>
           </div>
 
-          <div>
-            <h4 className="font-semibold text-[#C58A2B] mb-4">{t('footer.quickLinks')}</h4>
+          {/* Legal */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
+            <h4 className="text-sm font-bold text-mimu-wine-text dark:text-white mb-4 uppercase tracking-wider">Legal</h4>
             <ul className="space-y-2">
-              <li><Link to="/categoria/estadia" className="text-[#F4E8D8]/80 hover:text-[#C58A2B] transition-colors text-sm">{t('footer.explore')}</Link></li>
-              <li><a href="/#como-funciona" className="text-[#F4E8D8]/80 hover:text-[#C58A2B] transition-colors text-sm">{t('nav.howItWorks')}</a></li>
-              <li><Link to="/categoria/estadia" className="text-[#F4E8D8]/80 hover:text-[#C58A2B] transition-colors text-sm">{t('nav.book')}</Link></li>
+              <li>
+                <Link to="/politica-privacidade" className="text-sm text-mimu-wine-light-text dark:text-gray-300/80 hover:text-mimu-gold transition-colors">
+                  Política de Privacidade
+                </Link>
+              </li>
+              <li>
+                <Link to="/termos-de-uso" className="text-sm text-mimu-wine-light-text dark:text-gray-300/80 hover:text-mimu-gold transition-colors">
+                  Termos de Uso
+                </Link>
+              </li>
             </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-[#C58A2B] mb-4">{t('nav.contact')}</h4>
-            <p className="text-[#F4E8D8]/80 text-sm">info@mimu.ao</p>
-            <p className="text-[#F4E8D8]/80 text-sm mt-2">+244 XXX XXX XXX</p>
           </div>
         </div>
 
-        <div className="border-t border-[#5C1A1A] mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-[#F4E8D8]/60 text-sm">
-            {t('footer.copyright', { year: new Date().getFullYear() })}
-          </p>
-          <div className="flex gap-6">
-            <a href="#" className="text-[#F4E8D8]/60 hover:text-[#C58A2B] transition-colors text-sm">{t('footer.terms')}</a>
-            <a href="#" className="text-[#F4E8D8]/60 hover:text-[#C58A2B] transition-colors text-sm">{t('footer.privacy')}</a>
+        <div className="border-t border-mimu-cream-border dark:border-[#2A2A2A]/50 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-mimu-wine-light-text dark:text-gray-300/60">
+          <p>© {currentYear} Mimu Angola. Todos os direitos reservados.</p>
+          <div className="mt-2 md:mt-0 flex space-x-4">
+            <Link to="/politica-privacidade" className="hover:text-mimu-gold transition-colors">Privacidade</Link>
+            <span>&middot;</span>
+            <Link to="/termos-de-uso" className="hover:text-mimu-gold transition-colors">Termos</Link>
           </div>
         </div>
       </div>

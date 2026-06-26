@@ -1,28 +1,128 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useServices } from '../../context/ServicesContext'
-import { useOrdersByProvider } from '../../hooks/useOrders'
+import { useOrdersByProvider, updateOrderStatus } from '../../hooks/useOrders'
+import { useNotifications } from '../../hooks/useNotifications'
+import { useReviews } from '../../hooks/useReviews'
 import { categories } from '../../data/categories'
-import Navbar from '../../components/Navbar'
-import Footer from '../../components/Footer'
 import EditProfile from '../../components/EditProfile'
-import { updateOrderStatus } from '../../hooks/useOrders'
+import EventsManager from '../../components/EventsManager'
+import OptimizedImage from '../../components/common/OptimizedImage'
+import { supabase } from '../../config/supabaseClient'
+import toast from 'react-hot-toast'
+
 
 const statusLabels = { pendente: 'Pendente', aceite: 'Aceite', em_curso: 'Em curso', concluido: 'Concluído', cancelado: 'Cancelado' }
-const paymentLabels = { pendente: 'Pendente', aguardando: 'Aguardando Confirmação', confirmado: 'Confirmado', pago_50: 'Pago 50%' }
+const paymentLabels = { pendente: 'Pendente', aguardando: 'Aguardando Confirmação', confirmado: 'Confirmado', pago_50: 'Pago 50%', pago: 'Pago' }
+
+const LocalSpinner = () => (
+  <div className="flex flex-col items-center justify-center py-10 animate-fade-in">
+    <div className="w-8 h-8 border-4 border-mimu-cream-border dark:border-[#2A2A2A] border-t-[#C58A2B] rounded-full animate-spin"></div>
+    <p className="mt-3 text-sm font-medium text-mimu-wine-light-text dark:text-gray-300">A carregar conteúdo...</p>
+  </div>
+);
 
 export default function ProviderDashboard() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { getProviderServices } = useServices()
-  const { orders, reload } = useOrdersByProvider(user?.id)
-  const [tab, setTab] = useState('visao')
-  const [services, setServices] = useState([])
+  const { orders, reload, loading: ordersLoading } = useOrdersByProvider(user?.id)
+  const { notifications, markAsRead, loading: notificationsLoading, reload: reloadNotifications } = useNotifications(user?.id)
+  const { reviews, fetchReviews, loading: reviewsLoading } = useReviews(user?.id, 'provider')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  
+  // The main content area only toggles between non-modal tabs
+  const [activeMainTab, setActiveMainTab] = useState(tabParam && !['notificacoes', 'perfil'].includes(tabParam) ? tabParam : 'visao')
+  
+  // Modals are open when the query param matches
+  const isNotificationsOpen = tabParam === 'notificacoes'
+  const isEditProfileOpen = tabParam === 'perfil'
+
+  const [payments, setPayments] = useState([])
+  const [paymentsLoading, setPaymentsLoading] = useState(false)
+
+  const fetchPayments = async () => {
+    if (!user?.id) return
+    setPaymentsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (!error && data) {
+        setPayments(data)
+      } else if (error) {
+        console.error('Erro ao carregar pagamentos:', error)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setPaymentsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    if (user?.id) setServices(getProviderServices(user.id))
-  }, [user?.id, getProviderServices, tab])
+    if (activeMainTab === 'pagamentos') {
+      fetchPayments()
+    }
+  }, [user?.id, activeMainTab])
+
+  // Selected order & client profile details
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [clientProfile, setClientProfile] = useState(null)
+  const [loadingProfile, setLoadingProfile] = useState(false)
+
+  // Fetch client details when selectedOrder changes
+  useEffect(() => {
+    if (!selectedOrder?.client_id) {
+      setClientProfile(null)
+      return
+    }
+    setLoadingProfile(true)
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', selectedOrder.client_id)
+      .single()
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setClientProfile(data)
+        } else {
+          console.error('Erro ao buscar perfil do cliente:', error)
+        }
+        setLoadingProfile(false)
+      })
+  }, [selectedOrder])
+
+  useEffect(() => {
+    if (tabParam && !['notificacoes', 'perfil'].includes(tabParam)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveMainTab(tabParam)
+    }
+  }, [tabParam])
+
+  const [services, setServices] = useState([])
+  const [servicesLoading, setServicesLoading] = useState(true)
+
+
+
+  useEffect(() => {
+    if (user?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setServicesLoading(true)
+      getProviderServices(user.id).then(data => {
+        setServices(data)
+        setServicesLoading(false)
+      })
+    }
+  }, [user?.id, getProviderServices, activeMainTab])
+
+  useEffect(() => {
+    if (user?.id && activeMainTab === 'avaliacoes') fetchReviews()
+  }, [user?.id, activeMainTab, fetchReviews])
 
   const pendentes = orders.filter(o => o.status === 'pendente')
   const confirmadas = orders.filter(o => o.status === 'aceite' || o.status === 'em_curso')
@@ -30,192 +130,650 @@ export default function ProviderDashboard() {
   const ganhosSimulados = concluidas.length * (user?.basePrice || 25000) * 0.85
   const dividaSimulada = concluidas.length * (user?.basePrice || 25000) * 0.15
 
-  const handleStatus = (orderId, status) => {
-    updateOrderStatus(orderId, status)
+  const handleStatus = async (orderId, status) => {
+    try {
+      const res = await updateOrderStatus(orderId, status)
+      if (res) {
+        toast.success(`Pedido ${statusLabels[status] || status} com sucesso!`)
+      } else {
+        toast.error('Erro ao atualizar o estado do pedido.')
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('Ocorreu um erro ao atualizar o estado.')
+    }
     reload()
   }
 
+  if (user?.status === 'pending_approval' || user?.status === 'pending') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 w-full">
+        <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl p-4 md:p-8 shadow-md hover:shadow-lg transition-shadow duration-300 text-center">
+          <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white mb-4">Conta Pendente de Aprovação</h2>
+          <p className="text-mimu-wine-light-text dark:text-gray-300 mb-8">
+            Os seus dados de prestador foram recebidos e estão a ser avaliados pela nossa equipa administrativa. Assim que a sua conta for aprovada, terá acesso completo a este painel.
+          </p>
+          <button
+            onClick={logout}
+            className="px-6 py-3 bg-mimu-gold text-mimu-white-text font-bold rounded-xl hover:bg-[#b87d26] transition-colors transition-all duration-300 hover:shadow-md active:scale-95"
+          >
+            Terminar Sessão
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-[#F4E8D8]">
-      <Navbar />
-      <main className="pt-24 pb-16">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-[#C58A2B] flex items-center justify-center text-2xl font-bold text-[#3A0D0D]">
-                {user?.name?.[0] || '?'}
+    <div className="max-w-6xl mx-auto px-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          {(user?.avatar_url || user?.logo_url) && (
+            <div className="relative shrink-0 group">
+              <div className="w-16 h-16 rounded-full bg-mimu-gold flex items-center justify-center text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white overflow-hidden shadow-sm group-hover:shadow transition duration-300">
+                <OptimizedImage src={user?.avatar_url || user?.logo_url} alt="" className="w-full h-full transition-transform duration-300 group-hover:scale-105" objectFit="cover" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-[#3A0D0D]">{user?.name}</h1>
-                <p className="text-[#5C1A1A]/80">
-                  Painel do Prestador
-                  {user?.status === 'pending_approval' && (
-                    <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm">Pendente de Aprovação</span>
-                  )}
-                </p>
-              </div>
+              <button 
+                onClick={() => setSearchParams({ tab: 'perfil' })}
+                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-mimu-gold text-mimu-wine-text dark:text-white flex items-center justify-center shadow-md hover:bg-[#b87d26] transition active:scale-90 border-2 border-mimu-cream dark:border-[#121212]"
+                title="Editar Perfil"
+              >
+                <svg className="w-3 h-3 text-mimu-wine-text dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                </svg>
+              </button>
             </div>
-            <div className="flex gap-4">
-              <Link to="/" className="px-4 py-2 border-2 border-[#C58A2B] text-[#C58A2B] rounded-xl font-medium hover:bg-[#C58A2B]/10">
-                Ver site
-              </Link>
-              <button onClick={logout} className="px-4 py-2 text-[#5C1A1A]/80 hover:text-[#3A0D0D]">Sair</button>
+          )}
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white">{user?.name}</h1>
+              <button 
+                onClick={() => setSearchParams({ tab: 'perfil' })}
+                className="w-7 h-7 rounded-full bg-mimu-gold/10 hover:bg-mimu-gold/20 text-mimu-gold flex items-center justify-center transition active:scale-90"
+                title="Editar Perfil"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-mimu-wine-light-text dark:text-gray-300/80">
+              Painel do Prestador
+              {user?.status === 'pending_approval' && (
+                <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm">Pendente de Aprovação</span>
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <Link to="/" className="px-4 py-2 border-2 border-mimu-gold text-mimu-gold rounded-xl font-medium hover:bg-mimu-gold/10">
+            Explorar App
+          </Link>
+          <button onClick={logout} className="px-4 py-2 text-mimu-wine-light-text dark:text-gray-300/80 hover:text-mimu-wine-text dark:text-white min-h-[44px]">Sair</button>
+        </div>
+      </div>
+
+
+      <div className="w-full">
+        {activeMainTab === 'visao' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">Serviços ativos</p>
+              <p className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white">{user?.serviceTypes?.length || 0}</p>
+            </div>
+            <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">Reservas recebidas</p>
+              <p className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white">{orders.length}</p>
+            </div>
+            <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">Ganhos líquidos (simulação)</p>
+              <p className="text-xl md:text-2xl font-bold text-green-600">{new Intl.NumberFormat('pt-AO').format(ganhosSimulados)} AOA</p>
+            </div>
+            <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">Dívida pendente (simulação)</p>
+              <p className="text-xl md:text-2xl font-bold text-amber-600">{new Intl.NumberFormat('pt-AO').format(dividaSimulada)} AOA</p>
             </div>
           </div>
+        )}
 
-          {tab === 'visao' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white rounded-2xl p-6 shadow-md">
-                <p className="text-[#5C1A1A]/80 text-sm">Serviços ativos</p>
-                <p className="text-2xl font-bold text-[#3A0D0D]">{user?.serviceTypes?.length || 0}</p>
+        {/* Menu em Cubos */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
+          {[
+            { id: 'visao', label: 'Visão Geral', icon: '📊', gradient: 'from-[#3B82F6] to-[#1D4ED8]', shadow: 'shadow-blue-500/30' },
+            { id: 'reservas', label: 'Reservas', count: orders.length, icon: '📅', gradient: 'from-[#10B981] to-[#047857]', shadow: 'shadow-emerald-500/30' },
+            { id: 'servicos', label: 'Serviços', icon: '🛠️', gradient: 'from-[#F59E0B] to-[#B45309]', shadow: 'shadow-amber-500/30' },
+            { id: 'avaliacoes', label: 'Avaliações', icon: '⭐', gradient: 'from-[#8B5CF6] to-[#6D28D9]', shadow: 'shadow-purple-500/30' },
+            { id: 'pagamentos', label: 'Pagamentos', icon: '💳', gradient: 'from-[#EF4444] to-[#B91C1C]', shadow: 'shadow-red-500/30' },
+            { id: 'novidades', label: 'Eventos', icon: '🎉', gradient: 'from-[#EC4899] to-[#BE185D]', shadow: 'shadow-pink-500/30' }
+          ].map(t => (
+            <button
+              key={t.id}
+              onClick={() => setSearchParams({ tab: t.id })}
+              className={`relative overflow-visible rounded-2xl aspect-[4/3] flex flex-col items-center justify-center gap-1.5 transition-all duration-300 ${activeMainTab === t.id
+                ? 'ring-4 ring-mimu-gold scale-95 shadow-inner'
+                : `hover:scale-105 shadow-md ${t.shadow} hover:shadow-lg`
+                }`}
+            >
+              <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${t.gradient} opacity-95`}></div>
+              <div className="absolute inset-0 rounded-2xl bg-mimu-white dark:bg-[#1E1E1E]/5 backdrop-blur-[1px]"></div>
+
+              <div className="relative z-10 flex flex-col items-center justify-center text-white w-full h-full p-2">
+                <span className="text-2xl md:text-3xl mb-1 drop-shadow-md">{t.icon}</span>
+                <span className="font-bold text-xs md:text-sm text-center drop-shadow-md leading-tight">{t.label}</span>
               </div>
-              <div className="bg-white rounded-2xl p-6 shadow-md">
-                <p className="text-[#5C1A1A]/80 text-sm">Reservas recebidas</p>
-                <p className="text-2xl font-bold text-[#3A0D0D]">{orders.length}</p>
-              </div>
-              <div className="bg-white rounded-2xl p-6 shadow-md">
-                <p className="text-[#5C1A1A]/80 text-sm">Ganhos líquidos (simulação)</p>
-                <p className="text-2xl font-bold text-green-600">{new Intl.NumberFormat('pt-AO').format(ganhosSimulados)} AOA</p>
-              </div>
-              <div className="bg-white rounded-2xl p-6 shadow-md">
-                <p className="text-[#5C1A1A]/80 text-sm">Dívida pendente (simulação)</p>
-                <p className="text-2xl font-bold text-amber-600">{new Intl.NumberFormat('pt-AO').format(dividaSimulada)} AOA</p>
-              </div>
+
+              {t.count > 0 && (
+                <span className="absolute -top-2 -right-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold ring-2 ring-white shadow-md animate-pulse">
+                  {t.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Área de Conteúdo */}
+        <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-3xl shadow-sm border border-mimu-cream-border dark:border-[#2A2A2A] p-4 md:p-6 mb-8 overflow-hidden">
+          {activeMainTab === 'visao' && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold text-mimu-wine-text dark:text-white">Resumo</h2>
+              <p className="text-mimu-wine-light-text dark:text-gray-300/80">Pendentes: {pendentes.length} | Confirmadas: {confirmadas.length} | Concluídas: {concluidas.length}</p>
+              <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/60">
+                Lógica de comissão: Pagamento_recebido → dividir comissão | Pagamento_parcial → proporcional | Pagamento_manual → gerar dívida | Dívida_excedida → bloquear | Dívida_liquidada → desbloquear
+              </p>
             </div>
           )}
 
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="flex flex-wrap border-b border-[#F4E8D8]">
-              {[
-                { id: 'visao', label: 'Visão Geral' },
-                { id: 'reservas', label: 'Gestão de Reservas', count: orders.length },
-                { id: 'servicos', label: 'Gestão de Serviços' },
-                { id: 'pagamentos', label: 'Pagamentos' },
-                { id: 'perfil', label: 'Perfil' }
-              ].map(t => (
-                <button key={t.id} onClick={() => setTab(t.id)} className={`px-6 py-4 font-medium ${tab === t.id ? 'text-[#C58A2B] border-b-2 border-[#C58A2B]' : 'text-[#5C1A1A]/80'}`}>
-                  {t.label} {t.count > 0 && <span className="ml-1 text-sm">({t.count})</span>}
-                </button>
-              ))}
+          {activeMainTab === 'reservas' && (
+            <div>
+              <h2 className="text-lg font-bold text-mimu-wine-text dark:text-white mb-4">Todas as reservas</h2>
+              {ordersLoading ? (
+                <LocalSpinner />
+              ) : orders.length === 0 ? (
+                <p className="text-mimu-wine-light-text dark:text-gray-300/80 animate-fade-in">Ainda não recebeste reservas.</p>
+              ) : (
+                <div className="space-y-4 animate-fade-in">
+                  {orders.map(o => (
+                    <div 
+                      key={o.id} 
+                      onClick={() => setSelectedOrder(o)}
+                      className="p-4 bg-mimu-cream dark:bg-[#121212]/50 hover:bg-mimu-cream/70 dark:hover:bg-[#121212]/80 border border-transparent hover:border-mimu-gold/20 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]"
+                    >
+                      <div className="flex flex-wrap justify-between items-start gap-4">
+                        <div>
+                          <p className="font-medium text-mimu-wine-text dark:text-white">{o.serviceName}</p>
+                          <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">Cliente: {o.clientName}</p>
+                          <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">Data: {o.date} • {o.time || ''}</p>
+                          <p className="text-xs text-mimu-wine-light-text dark:text-gray-300/60">Método pagamento: {o.paymentMethod || 'Não definido'} | Estado: {paymentLabels[o.paymentStatus] || o.paymentStatus || 'Pendente'}</p>
+                        </div>
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <span className="px-3 py-1 rounded-lg text-sm bg-mimu-gray-100 dark:bg-[#121212]">{statusLabels[o.status]}</span>
+                          {o.status === 'pendente' && (
+                            <>
+                              <button onClick={() => handleStatus(o.id, 'aceite')} className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium hover:bg-green-200 transition">Aceitar</button>
+                              <button onClick={() => handleStatus(o.id, 'cancelado')} className="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm font-medium hover:bg-red-200 transition">Rejeitar</button>
+                            </>
+                          )}
+                          {o.status === 'aceite' && (
+                            <button onClick={() => handleStatus(o.id, 'em_curso')} className="px-3 py-1 bg-mimu-gold/20 text-mimu-gold rounded-lg text-sm font-medium hover:bg-mimu-gold/30 transition">Em curso</button>
+                          )}
+                          {o.status === 'em_curso' && (
+                            <button onClick={() => handleStatus(o.id, 'concluido')} className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium hover:bg-green-200 transition">Concluir</button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+          )}
 
-            <div className="p-6">
-              {tab === 'visao' && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-bold text-[#3A0D0D]">Resumo</h2>
-                  <p className="text-[#5C1A1A]/80">Pendentes: {pendentes.length} | Confirmadas: {confirmadas.length} | Concluídas: {concluidas.length}</p>
-                  <p className="text-sm text-[#5C1A1A]/60">
-                    Lógica de comissão: Pagamento_recebido → dividir comissão | Pagamento_parcial → proporcional | Pagamento_manual → gerar dívida | Dívida_excedida → bloquear | Dívida_liquidada → desbloquear
-                  </p>
+          {activeMainTab === 'servicos' && (
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <h2 className="text-lg font-bold text-mimu-wine-text dark:text-white">Gestão de Serviços</h2>
+                <div className="flex gap-2">
+                  <Link
+                    to="/prestador/servicos/criar"
+                    className="px-4 py-2 bg-mimu-gold text-mimu-wine-text dark:text-white font-medium rounded-xl hover:bg-[#b87d26]"
+                  >
+                    Criar novo serviço
+                  </Link>
+                  <Link
+                    to="/prestador/servicos"
+                    className="px-4 py-2 border-2 border-mimu-gold text-mimu-gold font-medium rounded-xl hover:bg-mimu-gold/10"
+                  >
+                    Meus serviços
+                  </Link>
+                </div>
+              </div>
+              <p className="text-mimu-wine-light-text dark:text-gray-300/80 mb-4">Total: {services.length} serviço(s)</p>
+              {servicesLoading ? (
+                <LocalSpinner />
+              ) : services.length === 0 ? (
+                <p className="text-mimu-wine-light-text dark:text-gray-300/80 animate-fade-in">Ainda não criaste nenhum serviço. Os serviços ficam pendentes de validação do Administrador.</p>
+              ) : (
+                <div className="space-y-3 animate-fade-in">
+                  {services.map((s) => (
+                    <div key={s.id} className="p-4 bg-mimu-cream dark:bg-[#121212]/50 rounded-xl flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-lg overflow-hidden bg-mimu-cream dark:bg-[#121212] flex-shrink-0">
+                          {s.images?.[0] ? <OptimizedImage src={s.images[0]} alt="" className="w-full h-full" objectFit="cover" /> : null}
+                        </div>
+                        <div>
+                          <p className="font-medium text-mimu-wine-text dark:text-white">{s.name}</p>
+                          <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">{categories.find(c => c.id === s.categoryId)?.name || s.categoryId} • {s.location}</p>
+                          <p className="text-xs text-mimu-wine-light-text dark:text-gray-300/60">Estado: {s.status === 'approved' ? 'Aprovado' : 'Pendente de Validação'}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Link to={`/servico/${s.id}`} className="px-3 py-1.5 text-sm text-mimu-gold font-medium hover:underline">Ver</Link>
+                        <button type="button" onClick={() => navigate(`/prestador/servicos/${s.id}/editar`)} className="px-3 py-1.5 text-sm border border-mimu-gold text-mimu-gold rounded-lg hover:bg-mimu-gold/10">Editar</button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
+            </div>
+          )}
 
-              {tab === 'reservas' && (
-                <div>
-                  <h2 className="text-lg font-bold text-[#3A0D0D] mb-4">Todas as reservas</h2>
-                  {orders.length === 0 ? (
-                    <p className="text-[#5C1A1A]/80">Ainda não recebeste reservas.</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {orders.map(o => (
-                        <div key={o.id} className="p-4 bg-[#F4E8D8]/50 rounded-xl">
-                          <div className="flex flex-wrap justify-between items-start gap-4">
-                            <div>
-                              <p className="font-medium text-[#3A0D0D]">{o.serviceName}</p>
-                              <p className="text-sm text-[#5C1A1A]/80">Cliente: {o.clientName}</p>
-                              <p className="text-sm text-[#5C1A1A]/80">Data: {o.date} • {o.time || ''}</p>
-                              <p className="text-xs text-[#5C1A1A]/60">Método pagamento: {o.paymentMethod || 'Não definido'} | Estado: {paymentLabels[o.paymentStatus] || o.paymentStatus || 'Pendente'}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="px-3 py-1 rounded-lg text-sm bg-gray-100">{statusLabels[o.status]}</span>
-                              {o.status === 'pendente' && (
-                                <>
-                                  <button onClick={() => handleStatus(o.id, 'aceite')} className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium">Aceitar</button>
-                                  <button onClick={() => handleStatus(o.id, 'cancelado')} className="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm font-medium">Rejeitar</button>
-                                </>
-                              )}
-                              {o.status === 'aceite' && (
-                                <button onClick={() => handleStatus(o.id, 'em_curso')} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">Em curso</button>
-                              )}
-                              {o.status === 'em_curso' && (
-                                <button onClick={() => handleStatus(o.id, 'concluido')} className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium">Concluir</button>
-                              )}
-                            </div>
+          {activeMainTab === 'pagamentos' && (
+            <div>
+              <h2 className="text-lg font-bold text-mimu-wine-text dark:text-white mb-4">Pagamentos Recebidos</h2>
+              {paymentsLoading ? (
+                <LocalSpinner />
+              ) : payments.length === 0 ? (
+                <p className="text-mimu-wine-light-text dark:text-gray-300/80 animate-fade-in">Ainda não recebeste nenhum pagamento para os teus serviços.</p>
+              ) : (
+                <div className="space-y-4 animate-fade-in">
+                  {payments.map(p => {
+                    const serviceName = p.metadata?.booking_details?.serviceName || 'Serviço Contratado'
+                    const clientName = p.metadata?.booking_details?.clientName || 'Cliente'
+                    
+                    let statusBadge = 'bg-amber-100 text-amber-800'
+                    let statusText = 'Pendente'
+                    if (p.status === 'paid') {
+                      statusBadge = 'bg-green-100 text-green-800'
+                      statusText = 'Confirmado'
+                    } else if (p.status === 'failed') {
+                      statusBadge = 'bg-red-100 text-red-800'
+                      statusText = 'Falhou'
+                    } else if (p.status === 'cancelled') {
+                      statusBadge = 'bg-gray-100 text-gray-800'
+                      statusText = 'Cancelado'
+                    }
+
+                    return (
+                      <div 
+                        key={p.id}
+                        className="p-4 bg-mimu-cream dark:bg-[#121212]/50 border border-transparent rounded-xl flex flex-wrap justify-between items-center gap-4 transition-all duration-300 hover:shadow-sm"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">💰</span>
+                            <p className="font-semibold text-mimu-wine-text dark:text-white">{serviceName}</p>
+                          </div>
+                          <div className="text-xs text-mimu-wine-light-text dark:text-gray-400 mt-1 space-y-0.5">
+                            <p>Cliente: <span className="font-medium text-mimu-wine-text dark:text-white">{clientName}</span></p>
+                            <p>Ref: <span className="font-mono">{p.transaction_reference}</span></p>
+                            <p>Método: {p.payment_method === 'appy_pay' ? 'Appy Pay' : p.payment_method}</p>
+                            <p>Data: {new Date(p.created_at).toLocaleString('pt-AO')}</p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        
+                        <div className="flex flex-col items-end gap-2">
+                          <span className="font-bold text-green-600 text-lg">
+                            +{new Intl.NumberFormat('pt-AO', { style: 'currency', currency: p.currency || 'AOA' }).format(p.amount)}
+                          </span>
+                          <span className={`px-2.5 py-0.5 rounded-lg text-xs font-semibold ${statusBadge}`}>
+                            {statusText}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
+            </div>
+          )}
 
-              {tab === 'servicos' && (
-                <div>
-                  <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                    <h2 className="text-lg font-bold text-[#3A0D0D]">Gestão de Serviços</h2>
-                    <div className="flex gap-2">
-                      <Link
-                        to="/prestador/servicos/criar"
-                        className="px-4 py-2 bg-[#C58A2B] text-[#3A0D0D] font-medium rounded-xl hover:bg-[#b87d26]"
-                      >
-                        Criar novo serviço
-                      </Link>
-                      <Link
-                        to="/prestador/servicos"
-                        className="px-4 py-2 border-2 border-[#C58A2B] text-[#C58A2B] font-medium rounded-xl hover:bg-[#C58A2B]/10"
-                      >
-                        Meus serviços
-                      </Link>
-                    </div>
+          {activeMainTab === 'avaliacoes' && (
+            <div>
+              <h2 className="text-lg font-bold text-mimu-wine-text dark:text-white mb-4">Avaliações dos Clientes</h2>
+              {reviewsLoading ? (
+                <LocalSpinner />
+              ) : reviews.length === 0 ? (
+                <p className="text-mimu-wine-light-text dark:text-gray-300/80 animate-fade-in">Ainda não recebeste nenhuma avaliação.</p>
+              ) : (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="bg-mimu-gold/20 p-4 rounded-xl inline-block mb-4">
+                    <p className="text-sm text-mimu-wine-light-text dark:text-gray-300 font-medium">Média Global</p>
+                    <p className="text-2xl font-bold text-mimu-wine-text dark:text-white">
+                      {(reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)} <span className="text-mimu-gold">★</span>
+                    </p>
                   </div>
-                  <p className="text-[#5C1A1A]/80 mb-4">Total: {services.length} serviço(s)</p>
-                  {services.length === 0 ? (
-                    <p className="text-[#5C1A1A]/80">Ainda não criaste nenhum serviço. Os serviços ficam pendentes de validação do Administrador.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {services.map((s) => (
-                        <div key={s.id} className="p-4 bg-[#F4E8D8]/50 rounded-xl flex flex-wrap items-center justify-between gap-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-14 h-14 rounded-lg overflow-hidden bg-[#F4E8D8] flex-shrink-0">
-                              {s.images?.[0] ? <img src={s.images[0]} alt="" className="w-full h-full object-cover" /> : null}
-                            </div>
-                            <div>
-                              <p className="font-medium text-[#3A0D0D]">{s.name}</p>
-                              <p className="text-sm text-[#5C1A1A]/80">{categories.find(c => c.id === s.categoryId)?.name || s.categoryId} • {s.location}</p>
-                              <p className="text-xs text-[#5C1A1A]/60">Estado: {s.status === 'approved' ? 'Aprovado' : 'Pendente de Validação'}</p>
-                            </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {reviews.map(r => (
+                      <div key={r.id} className="p-4 bg-mimu-cream dark:bg-[#121212]/50 rounded-xl">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-full bg-mimu-cream dark:bg-[#121212] overflow-hidden">
+                            {r.client?.avatar_url ? (
+                              <OptimizedImage src={r.client.avatar_url} className="w-full h-full" alt="" objectFit="cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center font-bold text-mimu-wine-text dark:text-white">{r.client?.name?.[0] || 'C'}</div>
+                            )}
                           </div>
-                          <div className="flex gap-2">
-                            <Link to={`/servico/${s.id}`} className="px-3 py-1.5 text-sm text-[#C58A2B] font-medium hover:underline">Ver</Link>
-                            <button type="button" onClick={() => navigate(`/prestador/servicos/${s.id}/editar`)} className="px-3 py-1.5 text-sm border border-[#C58A2B] text-[#C58A2B] rounded-lg hover:bg-[#C58A2B]/10">Editar</button>
+                          <div>
+                            <p className="font-medium text-mimu-wine-text dark:text-white">{r.client?.name || 'Cliente'}</p>
+                            <p className="text-xs text-mimu-wine-light-text dark:text-gray-300/60">{new Date(r.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <div className="ml-auto text-mimu-gold flex text-sm">
+                            {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
                           </div>
                         </div>
-                      ))}
+                        <p className="text-sm font-medium text-mimu-wine-light-text dark:text-gray-300 mb-1">Serviço: {r.service?.name}</p>
+                        <p className="text-sm text-mimu-wine-text dark:text-white italic">"{r.comment}"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeMainTab === 'novidades' && (
+            <EventsManager userId={user?.id} role={user?.role} />
+          )}
+
+        </div>
+      </div>
+
+      {/* Modal de Notificações */}
+      {isNotificationsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-3xl border border-mimu-cream-border dark:border-[#2A2A2A] p-6 max-w-lg w-full shadow-2xl relative max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between mb-4 border-b border-mimu-cream-border dark:border-[#2A2A2A] pb-3">
+              <h3 className="text-lg font-bold text-mimu-wine-text dark:text-white flex items-center gap-2">
+                <span>🔔</span> Notificações
+              </h3>
+              <button 
+                onClick={() => setSearchParams({ tab: activeMainTab })}
+                className="w-8 h-8 flex items-center justify-center bg-mimu-cream dark:bg-[#121212] text-mimu-wine-text dark:text-white rounded-full hover:bg-mimu-gold hover:text-white transition active:scale-90"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 pr-1">
+              {notificationsLoading ? (
+                <LocalSpinner />
+              ) : notifications.length === 0 ? (
+                <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-center py-8">Sem notificações.</p>
+              ) : (
+                <div className="space-y-3">
+                  {notifications.map(n => (
+                    <div 
+                      key={n.id} 
+                      onClick={async () => {
+                        if (!n.read) {
+                          await markAsRead(n.id)
+                          if (reloadNotifications) reloadNotifications()
+                        }
+                      }}
+                      className={`p-4 rounded-2xl border transition-all duration-300 ${
+                        n.read 
+                          ? 'bg-mimu-white dark:bg-[#1E1E1E] border-mimu-cream-border dark:border-[#2A2A2A]' 
+                          : 'bg-mimu-cream dark:bg-[#1E1E1E]/85 border-mimu-gold/20 shadow-sm'
+                      }`}
+                    >
+                      <p className="text-sm font-bold text-mimu-wine-text dark:text-white">{n.title}</p>
+                      <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80 mt-0.5">{n.message}</p>
+                      <p className="text-[10px] text-mimu-wine-light-text dark:text-gray-400 mt-1.5">{new Date(n.created_at).toLocaleString('pt-PT')}</p>
                     </div>
-                  )}
-                </div>
-              )}
-
-              {tab === 'pagamentos' && (
-                <div>
-                  <h2 className="text-lg font-bold text-[#3A0D0D] mb-4">Pagamentos (Visual / Simulação)</h2>
-                  <p className="text-[#5C1A1A]/80">Reservas pagas: {concluidas.length}</p>
-                  <p className="text-[#5C1A1A]/80">Reservas pendentes: {orders.filter(o => o.status !== 'concluido').length}</p>
-                  <p className="text-sm text-amber-700 mt-4">Integração real de pagamentos em desenvolvimento.</p>
-                </div>
-              )}
-
-              {tab === 'perfil' && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-bold text-[#3A0D0D]">Editar perfil do prestador</h2>
-                  <EditProfile />
+                  ))}
                 </div>
               )}
             </div>
           </div>
         </div>
-      </main>
-      <Footer />
+      )}
+
+      {/* Modal de Editar Perfil */}
+      {isEditProfileOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-3xl border border-mimu-cream-border dark:border-[#2A2A2A] p-6 max-w-lg w-full shadow-2xl relative max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between mb-4 border-b border-mimu-cream-border dark:border-[#2A2A2A] pb-3">
+              <h3 className="text-lg font-bold text-mimu-wine-text dark:text-white flex items-center gap-2">
+                <span>👤</span> Editar Perfil
+              </h3>
+              <button 
+                onClick={() => setSearchParams({ tab: activeMainTab })}
+                className="w-8 h-8 flex items-center justify-center bg-mimu-cream dark:bg-[#121212] text-mimu-wine-text dark:text-white rounded-full hover:bg-mimu-gold hover:text-white transition active:scale-90"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 pr-1">
+              <EditProfile onSuccess={() => setTimeout(() => setSearchParams({ tab: activeMainTab }), 1500)} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Detalhes da Reserva e Informações do Cliente */}
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in text-mimu-wine-text dark:text-white">
+          <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-3xl border border-mimu-cream-border dark:border-[#2A2A2A] p-6 max-w-2xl w-full shadow-2xl relative max-h-[90vh] flex flex-col">
+            
+            {/* Cabeçalho */}
+            <div className="flex items-center justify-between mb-4 border-b border-mimu-cream-border dark:border-[#2A2A2A] pb-3">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <span>📋</span> Detalhes do Pedido & Cliente
+              </h3>
+              <button 
+                onClick={() => setSelectedOrder(null)}
+                className="w-8 h-8 flex items-center justify-center bg-mimu-cream dark:bg-[#121212] text-mimu-wine-text dark:text-white rounded-full hover:bg-mimu-gold hover:text-white transition active:scale-90"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Conteúdo */}
+            <div className="overflow-y-auto flex-1 pr-1 space-y-6">
+              
+              {/* Informações da Reserva */}
+              <div className="p-5 bg-gradient-to-br from-mimu-cream/80 to-mimu-cream/30 dark:from-[#121212]/50 dark:to-[#121212]/20 border border-mimu-cream-border dark:border-[#2A2A2A] rounded-2xl shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-mimu-gold/5 rounded-full -mr-8 -mt-8"></div>
+                <div className="flex justify-between items-start gap-4 mb-4">
+                  <div>
+                    <h4 className="text-xl font-bold mb-1">{selectedOrder.serviceName}</h4>
+                    <p className="text-xs text-mimu-wine-light-text/60 dark:text-gray-400">ID: {selectedOrder.id}</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-lg text-sm font-semibold shadow-sm ${
+                    selectedOrder.status === 'pendente' ? 'bg-amber-100 text-amber-800' :
+                    selectedOrder.status === 'aceite' ? 'bg-mimu-gold/20 text-mimu-gold font-semibold' :
+                    selectedOrder.status === 'em_curso' ? 'bg-purple-100 text-purple-800' :
+                    selectedOrder.status === 'concluido' ? 'bg-green-100 text-green-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {statusLabels[selectedOrder.status] || selectedOrder.status}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mt-2">
+                  <div>
+                    <p className="text-xs text-mimu-wine-light-text/60 dark:text-gray-400 font-medium">Data da Reserva</p>
+                    <p className="font-semibold">{selectedOrder.date}</p>
+                  </div>
+                  {selectedOrder.time && (
+                    <div>
+                      <p className="text-xs text-mimu-wine-light-text/60 dark:text-gray-400 font-medium">Hora</p>
+                      <p className="font-semibold">{selectedOrder.time}</p>
+                    </div>
+                  )}
+                  {selectedOrder.guests && (
+                    <div>
+                      <p className="text-xs text-mimu-wine-light-text/60 dark:text-gray-400 font-medium">Convidados / Pessoas</p>
+                      <p className="font-semibold">{selectedOrder.guests}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-mimu-wine-light-text/60 dark:text-gray-400 font-medium">Método de Pagamento</p>
+                    <p className="font-semibold">{selectedOrder.paymentMethod || 'A definir'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-mimu-wine-light-text/60 dark:text-gray-400 font-medium">Estado do Pagamento</p>
+                    <p className="font-semibold">{paymentLabels[selectedOrder.paymentStatus] || selectedOrder.paymentStatus || 'Pendente'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-mimu-wine-light-text/60 dark:text-gray-400 font-medium">Total do Pedido</p>
+                    <p className="font-bold text-mimu-gold">{new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(selectedOrder.total || 0)}</p>
+                  </div>
+                </div>
+
+                {selectedOrder.specialRequests && (
+                  <div className="mt-4 pt-3 border-t border-mimu-cream-border dark:border-[#2A2A2A]/60">
+                    <p className="text-xs text-mimu-wine-light-text/60 dark:text-gray-400 font-medium mb-1">Pedidos Especiais do Cliente</p>
+                    <p className="text-sm italic">{selectedOrder.specialRequests}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Informações do Cliente */}
+              <div>
+                <h4 className="font-bold text-base mb-3">Informações do Cliente</h4>
+                {loadingProfile ? (
+                  <LocalSpinner />
+                ) : clientProfile ? (
+                  <div className="p-5 bg-mimu-cream/30 dark:bg-[#121212]/20 border border-mimu-cream-border/60 dark:border-[#2A2A2A]/40 rounded-2xl flex flex-col md:flex-row gap-4 items-start md:items-center">
+                    
+                    <div className="w-16 h-16 rounded-full bg-mimu-gold flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm border border-mimu-cream-border dark:border-[#2A2A2A]">
+                      {clientProfile.avatar_url ? (
+                        <OptimizedImage src={clientProfile.avatar_url} alt="" className="w-full h-full" objectFit="cover" />
+                      ) : (
+                        <span className="text-2xl font-bold">
+                          {(clientProfile.name || selectedOrder.clientName || 'C')[0].toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 space-y-2">
+                      <div>
+                        <h5 className="font-bold text-lg">
+                          {clientProfile.name}
+                        </h5>
+                        <p className="text-xs text-mimu-gold font-medium uppercase tracking-wide">
+                          Cliente Registado
+                        </p>
+                      </div>
+                      
+                      {clientProfile.description && (
+                        <p className="text-sm text-mimu-wine-light-text dark:text-gray-300 italic">
+                          "{clientProfile.description}"
+                        </p>
+                      )}
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-mimu-cream-border/40 dark:border-[#2A2A2A]/30 text-sm">
+                        {clientProfile.phone && (
+                          <div className="flex items-center gap-2">
+                            <span>📞</span>
+                            <span>{clientProfile.phone}</span>
+                          </div>
+                        )}
+                        {clientProfile.email && (
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <span>✉️</span>
+                            <span className="truncate" title={clientProfile.email}>{clientProfile.email}</span>
+                          </div>
+                        )}
+                        {(clientProfile.city || clientProfile.province) && (
+                          <div className="flex items-center gap-2 sm:col-span-2">
+                            <span>📍</span>
+                            <span>
+                              {clientProfile.city || ''}
+                              {clientProfile.city && clientProfile.province ? ', ' : ''}
+                              {clientProfile.province || ''}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-mimu-cream/30 dark:bg-[#121212]/20 border border-mimu-cream-border/60 dark:border-[#2A2A2A]/40 rounded-2xl">
+                    <p className="text-sm font-semibold">{selectedOrder.clientName}</p>
+                    <p className="text-xs text-mimu-wine-light-text/60 dark:text-gray-400 italic">Não foi possível carregar o perfil completo do cliente.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Ações do Modal */}
+            <div className="flex flex-wrap justify-between items-center gap-3 mt-6 pt-4 border-t border-mimu-cream-border dark:border-[#2A2A2A]">
+              <div className="flex gap-2">
+                {selectedOrder.status === 'pendente' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        handleStatus(selectedOrder.id, 'aceite');
+                        setSelectedOrder(prev => prev ? { ...prev, status: 'aceite' } : null);
+                      }}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-xl transition"
+                    >
+                      Aceitar
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleStatus(selectedOrder.id, 'cancelado');
+                        setSelectedOrder(null);
+                      }}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl transition"
+                    >
+                      Rejeitar
+                    </button>
+                  </>
+                )}
+                {selectedOrder.status === 'aceite' && (
+                  <button
+                    onClick={() => {
+                      handleStatus(selectedOrder.id, 'em_curso');
+                      setSelectedOrder(prev => prev ? { ...prev, status: 'em_curso' } : null);
+                    }}
+                    className="px-4 py-2 bg-mimu-gold hover:bg-[#b87d26] text-white text-sm font-medium rounded-xl transition"
+                  >
+                    Em curso
+                  </button>
+                )}
+                {selectedOrder.status === 'em_curso' && (
+                  <button
+                    onClick={() => {
+                      handleStatus(selectedOrder.id, 'concluido');
+                      setSelectedOrder(null);
+                    }}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-xl transition"
+                  >
+                    Concluir
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedOrder(null)}
+                className="px-5 py-2 bg-mimu-cream dark:bg-[#121212] text-mimu-wine-text dark:text-white text-sm font-medium hover:bg-mimu-gold hover:text-white rounded-xl transition"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

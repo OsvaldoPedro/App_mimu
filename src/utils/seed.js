@@ -1,31 +1,63 @@
-import { storage, KEYS } from './storage'
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
 
-export function seedDemoUsers() {
-  const users = storage.get(KEYS.USERS, [])
-  const hasAdmin = users.some(u => u.role === 'admin' || u.email === 'admin@meusite.com' || u.phone === '925468252')
+// Import local data
+import { angolaLocations } from '../constants/angolaLocations.js';
+import { categories } from '../data/categories.js';
 
-  const adminUser = {
-    id: 'adm_geral',
-    role: 'admin',
-    name: 'Admin Geral',
-    email: 'admin@meusite.com',
-    phone: '925468252',
-    password: '12345678',
-    status: 'active'
+// Parse .env.local
+const envContent = fs.readFileSync(path.resolve('.env.local'), 'utf-8');
+const VITE_SUPABASE_URL = envContent.match(/VITE_SUPABASE_URL=(.*)/)[1].trim();
+const VITE_SUPABASE_ANON_KEY = envContent.match(/VITE_SUPABASE_ANON_KEY=(.*)/)[1].trim();
+
+const supabase = createClient(VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY);
+
+async function seed() {
+  console.log('Starting Supabase Seeding...');
+
+  console.log('Seeding Provinces and Municipalities...');
+  for (const [provinceName, municipalities] of Object.entries(angolaLocations)) {
+    let { data: provinceData } = await supabase.from('provinces').select('id').eq('name', provinceName).maybeSingle();
+    let provId;
+    if (!provinceData) {
+      const { data, error } = await supabase.from('provinces').insert({ name: provinceName }).select('id').single();
+      if (error) { 
+        console.error('Error inserting province HTTP:', error); 
+        continue; 
+      }
+      provId = data.id;
+    } else {
+      provId = provinceData.id;
+    }
+
+    const munsToInsert = municipalities.map(m => ({
+      province_id: provId,
+      name: m
+    }));
+    
+    const { error: munErr } = await supabase.from('municipalities').upsert(munsToInsert, { onConflict: 'province_id, name' });
+    if (munErr) console.error(`Error inserting municipalities for ${provinceName}:`, munErr);
   }
 
-  // Garante que o Super Admin existe mesmo em instalações já em uso.
-  if (!hasAdmin) {
-    storage.set(KEYS.USERS, [...users, adminUser])
+  console.log('Seeding Categories...');
+  for (const cat of categories) {
+     const { id, name, icon, color, bgClass, textClass, services } = cat;
+     const { error: catErr } = await supabase.from('categories').upsert({
+       id, name, icon, color, bg_class: bgClass, text_class: textClass
+     }, { onConflict: 'id' });
+     if (catErr) console.error(`Error inserting category ${id}:`, catErr);
+
+     const srvsToInsert = services.map(s => ({
+       category_id: id,
+       name: s
+     }));
+     
+     await supabase.from('category_services').delete().eq('category_id', id);
+     await supabase.from('category_services').insert(srvsToInsert);
   }
-
-  // Se já existirem utilizadores, não volta a semear demos.
-  if (users.length > 0) return
-
-  const demoUsers = [
-    { id: 'cmp_demo', role: 'company', companyName: 'Empresa Demo', email: 'empresa@demo.ao', phone: '+244 900 000 001', password: '123456', status: 'active' },
-    { id: 'prv_demo', role: 'provider', name: 'Prestador Demo', email: 'prestador@demo.ao', phone: '+244 900 000 002', password: '123456', status: 'active', categoryId: 'beleza', serviceTypes: ['Spa', 'Massagens'], basePrice: 35000, province: 'Luanda' },
-    { id: 'usr_demo', role: 'client', name: 'Cliente Demo', email: 'cliente@demo.ao', phone: '+244 900 000 003', password: '123456' }
-  ]
-  storage.set(KEYS.USERS, [...storage.get(KEYS.USERS, []), ...demoUsers])
+  
+  console.log('Seeding completed successfully!');
 }
+
+seed().catch(console.error);

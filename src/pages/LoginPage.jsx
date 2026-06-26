@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import { toast } from 'react-hot-toast'
 
 export default function LoginPage() {
   const { user, login } = useAuth()
@@ -15,15 +16,17 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!user) return
-    if (fromPath && fromPath !== '/entrar') {
+    // Se houver um fromPath válido (diferente de /entrar e /), volta para onde tentou ir
+    if (fromPath && fromPath !== '/entrar' && fromPath !== '/') {
       navigate(fromPath, { replace: true })
       return
     }
-    const target = user.role === 'company'
+    const userRole = user.role ? user.role.trim().toLowerCase() : 'client'
+    const target = ['company', 'empresa'].includes(userRole)
       ? '/empresa'
-      : user.role === 'provider'
+      : ['provider', 'prestador'].includes(userRole)
         ? '/prestador'
-        : user.role === 'admin'
+        : ['admin', 'administrador'].includes(userRole)
           ? '/admin'
           : '/painel'
     navigate(target, { replace: true })
@@ -32,22 +35,25 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     setError('')
-    const result = login(email.trim(), password)
+
+    if (!email) {
+      setError(t('auth.emailMissingError', 'Por favor, insira o seu e-mail ou telefone.'))
+      return
+    }
+
+    setLoading(true)
+    
+    const result = await login(email.trim(), password)
+    setLoading(false)
+    
     if (result.success) {
-      const u = result.user
-      const fallback = u?.role === 'company'
-        ? '/empresa'
-        : u?.role === 'provider'
-          ? '/prestador'
-          : u?.role === 'admin'
-            ? '/admin'
-            : '/painel'
-      const target = fromPath && fromPath !== '/entrar' ? fromPath : fallback
-      navigate(target, { replace: true })
+      toast.success('Acesso aceite!')
+      // Redirecionamento será feito pelo useEffect quando user for atualizado
     } else {
       setError(result.error || t('auth.invalidCredentials'))
     }
@@ -56,53 +62,63 @@ export default function LoginPage() {
   const showReserveMessage = Boolean(fromPath && fromPath.startsWith('/servico/') && fromPath.includes('/reservar'))
 
   return (
-    <div className="min-h-screen bg-[#F4E8D8]">
+    <div className="min-h-screen bg-mimu-cream dark:bg-[#121212]">
       <Navbar />
       <main className="pt-24 pb-16 px-4">
-        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-2xl font-bold text-[#3A0D0D] mb-2">{t('auth.login')}</h1>
-          <p className="text-[#5C1A1A]/80 mb-6">{t('auth.loginSubtitle')}</p>
+        <div className="max-w-md mx-auto bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl shadow-xl p-4 md:p-8">
+          <h1 className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white mb-2">{t('auth.login')}</h1>
+          <p className="text-mimu-wine-light-text dark:text-gray-300/80 mb-6">{t('auth.loginSubtitle', 'Insira o seu e-mail ou telefone e palavra-passe para aceder à sua conta.')}</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {showReserveMessage && !user && (
-              <div className="p-3 bg-amber-100 text-amber-800 rounded-xl text-sm">
-                {t('auth.loginToReserve')}
-              </div>
-            )}
-            {error && (
-              <div className="p-3 bg-red-100 text-red-700 rounded-xl text-sm">{error}</div>
-            )}
+          {showReserveMessage && !user && (
+            <div className="p-3 bg-amber-100 text-amber-800 rounded-xl text-sm mb-4">
+              {t('auth.loginToReserve')}
+            </div>
+          )}
+
+          {error && (
+            <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-xl text-sm">{error}</div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">{t('auth.emailOrPhone')}</label>
+              <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('auth.emailPhoneLabel', 'E-mail / Telefone')}</label>
               <input
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none"
-                placeholder={t('auth.emailPlaceholder')}
+                className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none"
+                placeholder={t('auth.emailPhonePlaceholder', 'Digite seu e-mail ou telefone')}
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-[#3A0D0D] mb-2">{t('auth.password')}</label>
+              <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('auth.passwordLabel', 'Palavra-passe')}</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-xl border-2 border-[#F4E8D8] focus:border-[#C58A2B] focus:outline-none"
+                className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none"
+                placeholder={t('auth.passwordPlaceholder', '••••••••')}
               />
             </div>
+            <div className="text-right mt-1 mb-2">
+              <Link to="/recuperar-senha" className="text-sm text-mimu-gold hover:underline font-medium">{t('auth.forgotPassword', 'Esqueceu a palavra-passe?')}</Link>
+            </div>
+            
             <button
               type="submit"
-              className="w-full py-4 bg-[#C58A2B] hover:bg-[#E0B15C] text-[#3A0D0D] font-bold rounded-xl transition-colors"
-            >{t('auth.login')}</button>
-
+              disabled={loading}
+              className="w-full py-4 bg-mimu-gold hover:bg-mimu-gold-hover text-mimu-wine-text dark:text-white font-bold rounded-xl transition-colors disabled:opacity-50 transition-all duration-300 hover:shadow-md active:scale-95"
+            >
+              {loading ? t('auth.loggingIn', 'A entrar...') : t('auth.login', 'Entrar')}
+            </button>
           </form>
-          <p className="text-center mt-2 text-[#5C1A1A]/80"><a href="/recover-password">{t('auth.forgotPassword')}</a></p>
-          <p className="mt-6 text-center text-[#5C1A1A]/80 text-sm">
+
+          <p className="mt-6 text-center text-mimu-wine-light-text dark:text-gray-300/80 text-sm">
             {t('auth.noAccount')}{' '}
-            <Link to="/registar" className="text-[#C58A2B] font-semibold hover:underline">
+            <Link to="/registar" className="text-mimu-gold font-semibold hover:underline">
               {t('auth.createAccount')}
             </Link>
           </p>

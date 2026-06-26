@@ -36,7 +36,7 @@ export async function updateBookingStatus(bookingId, status) {
  * Obtém reservas com filtros opcionais.
  * @param {Object} filter - ex: { clientId, providerId, status }
  */
-export async function getBookings(filter = {}) {
+export async function getBookings(_filter = {}) {
   // TODO: integrar com Supabase (queries por utilizador, fornecedor, estado, etc.)
   return []
 }

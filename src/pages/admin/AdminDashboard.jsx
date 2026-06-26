@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import AdminSidebar from '../../components/AdminSidebar'
-import { storage, KEYS } from '../../utils/storage'
+import { supabase } from '../../config/supabaseClient'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+
+const COLORS = ['#C58A2B', '#8C2E3C', '#1D3557', '#457B9D', '#A8DADC']
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -8,105 +10,313 @@ export default function AdminDashboard() {
     ordersMonth: 0,
     totalRevenue: 0,
     completedServices: 0,
+    totalEvents: 0,
   })
+  const [recentOrders, setRecentOrders] = useState([])
+  const [weeklyData, setWeeklyData] = useState([])
+  const [categoryData, setCategoryData] = useState([])
+  const [recentSearches, setRecentSearches] = useState([])
+  const [topSearches, setTopSearches] = useState([])
 
   useEffect(() => {
-    // Calculate stats from storage
-    const orders = storage.get(KEYS.ORDERS, [])
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const fetchAdminData = async () => {
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    const ordersToday = orders.filter(order => new Date(order.createdAt) >= today).length
-    const ordersMonth = orders.filter(order => new Date(order.createdAt) >= monthStart).length
-    const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0)
-    const completedServices = orders.filter(order => order.status === 'concluido').length
+      if (!error && orders) {
+        const now = new Date()
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-    setStats({ ordersToday, ordersMonth, totalRevenue, completedServices })
+        const ordersToday = orders.filter(order => new Date(order.created_at) >= today).length
+        const ordersMonth = orders.filter(order => new Date(order.created_at) >= monthStart).length
+        
+        // Revenue should count from realistically completed orders
+        const completedOnly = orders.filter(order => order.status === 'concluido')
+        const totalRevenue = completedOnly.reduce((sum, order) => sum + (Number(order.total) || 0), 0)
+        
+        const completedServices = completedOnly.length
+
+        // Build Weekly Data (last 7 days)
+        const last7Days = Array.from({length: 7}, (_, i) => {
+          const d = new Date()
+          d.setDate(d.getDate() - (6 - i))
+          return { date: d.toISOString().split('T')[0], name: d.toLocaleDateString('pt-AO', {weekday: 'short'}), Pedidos: 0 }
+        })
+
+        const catMap = {}
+
+        orders.forEach(order => {
+          const orderDate = new Date(order.created_at).toISOString().split('T')[0]
+          const dayMatch = last7Days.find(d => d.date === orderDate)
+          if (dayMatch) {
+            dayMatch.Pedidos += 1
+          }
+
+          // Build Category/Service counts
+          if (order.service_name) {
+             catMap[order.service_name] = (catMap[order.service_name] || 0) + 1
+          }
+        })
+
+        const catArray = Object.entries(catMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value).slice(0, 5)
+
+        // Contagem de Eventos e Tickets
+        const { count: totalEvents } = await supabase
+          .from('events')
+          .select('*', { count: 'exact', head: true })
+
+        setStats({ 
+          ordersToday, 
+          ordersMonth, 
+          totalRevenue, 
+          completedServices,
+          totalEvents: totalEvents || 0,
+        })
+        setRecentOrders(orders.slice(0, 5))
+        setWeeklyData(last7Days)
+        setCategoryData(catArray.length ? catArray : [{ name: 'Sem dados', value: 1 }])
+
+        // Fetch recent searches
+        const { data: recentSearchesData } = await supabase
+          .from('search_history')
+          .select('id, query, created_at, user_id, profiles:user_id(name, email)')
+          .order('created_at', { ascending: false })
+          .limit(8)
+
+        if (recentSearchesData) {
+          setRecentSearches(recentSearchesData)
+        }
+
+        // Fetch and calculate top searches
+        const { data: allSearches } = await supabase
+          .from('search_history')
+          .select('query')
+          .order('created_at', { ascending: false })
+          .limit(2000)
+
+        if (allSearches) {
+          const searchCountMap = {}
+          allSearches.forEach(item => {
+            const raw = item.query.trim()
+            const capitalized = raw.charAt(0).toUpperCase() + raw.slice(1)
+            searchCountMap[capitalized] = (searchCountMap[capitalized] || 0) + 1
+          })
+          const sortedTop = Object.entries(searchCountMap)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5)
+          setTopSearches(sortedTop)
+        }
+      }
+    }
+
+    fetchAdminData()
   }, [])
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[#F4E8D8]">
-      <AdminSidebar />
-      
-      {/* Main Content */}
-      <div className="flex-1 p-4 sm:p-6 md:p-8 w-full">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#3A0D0D] mb-6 md:mb-8">Dashboard</h1>
+    <div className="w-full">
+        <h1 className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-wine-text dark:text-white mb-6 md:mb-8">Dashboard</h1>
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 md:mb-8">
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <h3 className="text-sm sm:text-lg font-semibold text-[#3A0D0D]">Pedidos Hoje</h3>
-            <p className="text-2xl sm:text-3xl font-bold text-[#C58A2B] mt-2">{stats.ordersToday}</p>
+          <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-md hover:shadow-md hover:shadow-lg transition-shadow duration-300 transition-shadow">
+            <h3 className="text-sm sm:text-lg font-semibold text-mimu-wine-text dark:text-white">Pedidos Hoje</h3>
+            <p className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-gold mt-2">{stats.ordersToday}</p>
           </div>
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <h3 className="text-sm sm:text-lg font-semibold text-[#3A0D0D]">Pedidos no Mês</h3>
-            <p className="text-2xl sm:text-3xl font-bold text-[#C58A2B] mt-2">{stats.ordersMonth}</p>
+          <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-md hover:shadow-md hover:shadow-lg transition-shadow duration-300 transition-shadow">
+            <h3 className="text-sm sm:text-lg font-semibold text-mimu-wine-text dark:text-white">Pedidos no Mês</h3>
+            <p className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-gold mt-2">{stats.ordersMonth}</p>
           </div>
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <h3 className="text-sm sm:text-lg font-semibold text-[#3A0D0D]">Receita Total</h3>
-            <p className="text-2xl sm:text-3xl font-bold text-[#C58A2B] mt-2">{stats.totalRevenue.toFixed(2)} Kz</p>
+          <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-md hover:shadow-md hover:shadow-lg transition-shadow duration-300 transition-shadow">
+            <h3 className="text-sm sm:text-lg font-semibold text-mimu-wine-text dark:text-white">Receita Total</h3>
+            <p className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-gold mt-2">{stats.totalRevenue.toFixed(2)} Kz</p>
           </div>
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <h3 className="text-sm sm:text-lg font-semibold text-[#3A0D0D]">Serviços Concluídos</h3>
-            <p className="text-2xl sm:text-3xl font-bold text-[#C58A2B] mt-2">{stats.completedServices}</p>
+          <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-md hover:shadow-md hover:shadow-lg transition-shadow duration-300 transition-shadow">
+            <h3 className="text-sm sm:text-lg font-semibold text-mimu-wine-text dark:text-white">Serviços Concluídos</h3>
+            <p className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-gold mt-2">{stats.completedServices}</p>
+          </div>
+        </div>
+
+        {/* Seção de Controle de Eventos */}
+        <div className="mb-6 md:mb-8 bg-mimu-cream/30 dark:bg-[#121212]/30 p-5 rounded-3xl border border-mimu-cream-border dark:border-[#2A2A2A]/60">
+          <h2 className="text-sm sm:text-base font-bold text-mimu-wine-text dark:text-white mb-4 flex items-center gap-2">
+            <span>📅</span> Estatísticas de Eventos
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-sm border border-mimu-cream-border dark:border-[#2A2A2A] hover:shadow-md transition-shadow duration-300">
+              <h3 className="text-xs sm:text-sm font-semibold text-mimu-wine-light-text dark:text-gray-400 uppercase tracking-wider">Total de Eventos</h3>
+              <p className="text-xl sm:text-3xl font-extrabold text-mimu-wine-text dark:text-white mt-2">{stats.totalEvents}</p>
+              <p className="text-[10px] text-mimu-wine-light-text dark:text-gray-500 mt-1">Eventos e Workshops criados</p>
+            </div>
           </div>
         </div>
 
         {/* Charts and Lists */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
-            <h3 className="text-lg sm:text-xl font-semibold text-[#3A0D0D] mb-4">Pedidos da Semana</h3>
-            {/* Placeholder for chart */}
-            <div className="h-48 sm:h-64 bg-gray-100 rounded flex items-center justify-center">
-              <p className="text-gray-500 text-center px-4 text-sm sm:text-base">Gráfico de pedidos da semana (implementar com Chart.js ou Recharts)</p>
+          <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300">
+            <h3 className="text-lg sm:text-xl font-semibold text-mimu-wine-text dark:text-white mb-4">Pedidos da Semana</h3>
+            <div className="h-48 sm:h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB"/>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#4B5563', fontSize: 12}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#4B5563', fontSize: 12}} allowDecimals={false} />
+                  <Tooltip cursor={{fill: 'rgba(197, 138, 43, 0.1)'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}} />
+                  <Bar dataKey="Pedidos" fill="#C58A2B" radius={[4, 4, 0, 0]} barSize={30} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
-            <h3 className="text-lg sm:text-xl font-semibold text-[#3A0D0D] mb-4">Categorias Mais Usadas</h3>
-            {/* Placeholder for chart */}
-            <div className="h-48 sm:h-64 bg-gray-100 rounded flex items-center justify-center">
-              <p className="text-gray-500 text-center px-4 text-sm sm:text-base">Gráfico de categorias mais usadas</p>
+          <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300">
+            <h3 className="text-lg sm:text-xl font-semibold text-mimu-wine-text dark:text-white mb-4">Serviços Mais Requisitados</h3>
+            <div className="h-48 sm:h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}} />
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{fontSize: '12px'}} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Seção de Análise de Pesquisas */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8 animate-fade-in-slow">
+          {/* Top Termos Pesquisados */}
+          <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300">
+            <h3 className="text-lg sm:text-xl font-semibold text-mimu-wine-text dark:text-white mb-4 flex items-center gap-2">
+              <span>🔥</span> Termos Mais Procurados
+            </h3>
+            {topSearches.length === 0 ? (
+              <p className="text-sm text-mimu-wine-light-text dark:text-gray-400 py-6 text-center">Nenhum termo pesquisado ainda.</p>
+            ) : (
+              <div className="space-y-4">
+                {topSearches.map((item, idx) => {
+                  const maxCount = topSearches[0]?.count || 1
+                  const percentage = (item.count / maxCount) * 100
+                  return (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between items-center text-sm font-medium">
+                        <span className="text-mimu-wine-text dark:text-gray-300 font-bold">
+                          {idx + 1}. {item.name}
+                        </span>
+                        <span className="text-mimu-gold font-extrabold">{item.count} pesquisas</span>
+                      </div>
+                      <div className="w-full bg-mimu-cream/50 dark:bg-gray-800/50 h-2.5 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-mimu-gold h-full rounded-full transition-all duration-500" 
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Últimas Pesquisas */}
+          <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300">
+            <h3 className="text-lg sm:text-xl font-semibold text-mimu-wine-text dark:text-white mb-4 flex items-center gap-2">
+              <span>🔍</span> Histórico de Pesquisa Recente
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead>
+                  <tr className="border-b border-mimu-border-light text-mimu-wine-text dark:text-white pb-2 font-semibold">
+                    <th className="pb-2">Termo</th>
+                    <th className="pb-2">Utilizador</th>
+                    <th className="pb-2 text-right">Data/Hora</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentSearches.length === 0 ? (
+                    <tr>
+                      <td colSpan="3" className="py-4 text-center text-mimu-wine-light-text dark:text-gray-400">Nenhuma pesquisa recente registada.</td>
+                    </tr>
+                  ) : (
+                    recentSearches.map((search) => {
+                      const userLabel = search.profiles?.name || search.profiles?.email || 'Anónimo'
+                      const searchDate = new Date(search.created_at).toLocaleString('pt-PT', {
+                        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                      })
+                      return (
+                        <tr key={search.id} className="border-b border-mimu-border-light/40 hover:bg-mimu-gray-50 dark:hover:bg-[#121212]/40 transition-colors">
+                          <td className="py-2.5 font-bold text-mimu-wine-text dark:text-gray-300 max-w-[120px] truncate" title={search.query}>
+                            {search.query}
+                          </td>
+                          <td className="py-2.5 text-mimu-wine-light-text dark:text-gray-400">
+                            {userLabel}
+                          </td>
+                          <td className="py-2.5 text-right text-gray-400">
+                            {searchDate}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
         {/* Recent Orders */}
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
-          <h3 className="text-lg sm:text-xl font-semibold text-[#3A0D0D] mb-4">Pedidos Recentes</h3>
+        <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300">
+          <h3 className="text-lg sm:text-xl font-semibold text-mimu-wine-text dark:text-white mb-4">Pedidos Recentes</h3>
           <div className="overflow-x-auto -mx-4 sm:mx-0 sm:overflow-visible">
             <table className="w-full text-left text-sm sm:text-base min-w-max sm:min-w-0">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="pb-3 px-4 sm:px-0 font-semibold text-[#3A0D0D]">Cliente</th>
-                  <th className="pb-3 px-4 sm:px-0 font-semibold text-[#3A0D0D] hidden sm:table-cell">Serviço</th>
-                  <th className="pb-3 px-4 sm:px-0 font-semibold text-[#3A0D0D]">Valor</th>
-                  <th className="pb-3 px-4 sm:px-0 font-semibold text-[#3A0D0D]">Estado</th>
+                <tr className="border-b border-mimu-border-light">
+                  <th className="pb-3 px-4 sm:px-0 font-semibold text-mimu-wine-text dark:text-white">Cliente</th>
+                  <th className="pb-3 px-4 sm:px-0 font-semibold text-mimu-wine-text dark:text-white hidden sm:table-cell">Serviço</th>
+                  <th className="pb-3 px-4 sm:px-0 font-semibold text-mimu-wine-text dark:text-white">Valor</th>
+                  <th className="pb-3 px-4 sm:px-0 font-semibold text-mimu-wine-text dark:text-white">Estado</th>
                 </tr>
               </thead>
               <tbody>
-                {storage.get(KEYS.ORDERS, []).slice(0, 5).map((order) => (
-                  <tr key={order.id} className="border-b border-gray-100">
-                    <td className="py-3 px-4 sm:px-0 text-[#5C1A1A]">{order.clientName}</td>
-                    <td className="py-3 px-4 sm:px-0 text-[#5C1A1A] hidden sm:table-cell">{order.serviceName}</td>
-                    <td className="py-3 px-4 sm:px-0 text-[#5C1A1A]">{order.total} Kz</td>
-                    <td className="py-3 px-4 sm:px-0">
-                      <span className={`px-2 py-1 rounded text-xs sm:text-sm font-medium inline-block ${
-                        order.status === 'concluido' ? 'bg-green-100 text-green-800' :
-                        order.status === 'pendente' ? 'bg-amber-100 text-amber-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {order.status}
-                      </span>
-                    </td>
+                {recentOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="py-4 text-center text-mimu-wine-light-text dark:text-gray-300 text-sm">Nenhum pedido recente encontrado.</td>
                   </tr>
-                ))}
+                ) : (
+                  recentOrders.map((order) => (
+                    <tr key={order.id} className="border-b border-mimu-border-light hover:bg-mimu-gray-50 dark:bg-[#121212] transition-colors">
+                      <td className="py-3 px-4 sm:px-0 text-mimu-wine-light-text dark:text-gray-300">{order.client_name || 'Desconhecido'}</td>
+                      <td className="py-3 px-4 sm:px-0 text-mimu-wine-light-text dark:text-gray-300 hidden sm:table-cell">{order.service_name || '-'}</td>
+                      <td className="py-3 px-4 sm:px-0 text-mimu-wine-light-text dark:text-gray-300 font-medium">{order.total || 0} Kz</td>
+                      <td className="py-3 px-4 sm:px-0">
+                        <span className={`px-2 py-1 rounded text-xs sm:text-sm font-bold inline-block capitalize ${
+                          order.status === 'concluido' ? 'bg-green-100 text-green-800' :
+                          order.status === 'pendente' ? 'bg-amber-100 text-amber-800' :
+                          'bg-mimu-gray-100 dark:bg-[#121212] text-mimu-text-dark dark:text-white'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
-      </div>
     </div>
   )
 }
-
