@@ -4,13 +4,14 @@ import { supabase } from '../config/supabaseClient'
  * Auxiliar para formatar erros retornados pelas Edge Functions
  */
 async function extractErrorMessage(err) {
-  if (err instanceof Response) {
+  const response = err?.context || (err instanceof Response ? err : null)
+  if (response) {
     try {
-      const data = await err.json()
+      const data = await response.json()
       return data.error || data.message || 'Erro no servidor de pagamentos.'
     } catch (_) {
       try {
-        return await err.text()
+        return await response.text()
       } catch (_) {}
     }
   }
