@@ -11,6 +11,10 @@ export default function AdminDashboard() {
     totalRevenue: 0,
     completedServices: 0,
     totalEvents: 0,
+    totalCompanies: 0,
+    totalProviders: 0,
+    totalCompanyPartners: 0,
+    activeCompanyPartners: 0,
   })
   const [recentOrders, setRecentOrders] = useState([])
   const [weeklyData, setWeeklyData] = useState([])
@@ -63,10 +67,16 @@ export default function AdminDashboard() {
 
         const catArray = Object.entries(catMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value).slice(0, 5)
 
-        // Contagem de Eventos e Tickets
-        const { count: totalEvents } = await supabase
-          .from('events')
-          .select('*', { count: 'exact', head: true })
+        // Contagem de Eventos, Empresas, Prestadores e Parceiros
+        const [{ count: totalEvents }, { count: totalCompanies }, { count: totalProviders }, { data: allPartners }] = await Promise.all([
+          supabase.from('events').select('*', { count: 'exact', head: true }),
+          supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'company'),
+          supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'provider'),
+          supabase.from('company_partners').select('status'),
+        ])
+
+        const totalCompanyPartners = allPartners?.length || 0
+        const activeCompanyPartners = allPartners?.filter(p => p.status === 'active').length || 0
 
         setStats({ 
           ordersToday, 
@@ -74,6 +84,10 @@ export default function AdminDashboard() {
           totalRevenue, 
           completedServices,
           totalEvents: totalEvents || 0,
+          totalCompanies: totalCompanies || 0,
+          totalProviders: totalProviders || 0,
+          totalCompanyPartners,
+          activeCompanyPartners,
         })
         setRecentOrders(orders.slice(0, 5))
         setWeeklyData(last7Days)
@@ -137,6 +151,31 @@ export default function AdminDashboard() {
           <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-md hover:shadow-md hover:shadow-lg transition-shadow duration-300 transition-shadow">
             <h3 className="text-sm sm:text-lg font-semibold text-mimu-wine-text dark:text-white">Serviços Concluídos</h3>
             <p className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-gold mt-2">{stats.completedServices}</p>
+          </div>
+        </div>
+
+        {/* Seção de Controle de Prestadores por Empresa */}
+        <div className="mb-6 md:mb-8 bg-mimu-cream/30 dark:bg-[#121212]/30 p-5 rounded-3xl border border-mimu-cream-border dark:border-[#2A2A2A]/60">
+          <h2 className="text-sm sm:text-base font-bold text-mimu-wine-text dark:text-white mb-4 flex items-center gap-2">
+            <span>👥</span> Visão Geral de Prestadores
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-mimu-cream-border dark:border-[#2A2A2A] hover:shadow-md transition-shadow duration-300">
+              <h3 className="text-xs font-semibold text-mimu-wine-light-text dark:text-gray-400 uppercase tracking-wider">Empresas</h3>
+              <p className="text-2xl font-extrabold text-mimu-wine-text dark:text-white mt-2">{stats.totalCompanies}</p>
+            </div>
+            <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-mimu-cream-border dark:border-[#2A2A2A] hover:shadow-md transition-shadow duration-300">
+              <h3 className="text-xs font-semibold text-mimu-wine-light-text dark:text-gray-400 uppercase tracking-wider">Prestadores Registados</h3>
+              <p className="text-2xl font-extrabold text-mimu-wine-text dark:text-white mt-2">{stats.totalProviders}</p>
+            </div>
+            <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-mimu-cream-border dark:border-[#2A2A2A] hover:shadow-md transition-shadow duration-300">
+              <h3 className="text-xs font-semibold text-mimu-wine-light-text dark:text-gray-400 uppercase tracking-wider">Prestadores por Empresas</h3>
+              <p className="text-2xl font-extrabold text-mimu-gold mt-2">{stats.totalCompanyPartners}</p>
+            </div>
+            <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 rounded-2xl shadow-sm border border-mimu-cream-border dark:border-[#2A2A2A] hover:shadow-md transition-shadow duration-300">
+              <h3 className="text-xs font-semibold text-mimu-wine-light-text dark:text-gray-400 uppercase tracking-wider">Prestadores Ativos (Empresas)</h3>
+              <p className="text-2xl font-extrabold text-green-600 mt-2">{stats.activeCompanyPartners}</p>
+            </div>
           </div>
         </div>
 
