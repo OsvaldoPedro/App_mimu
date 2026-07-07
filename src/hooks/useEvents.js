@@ -13,8 +13,7 @@ export function useUpcomingEvents() {
         *,
         profiles:created_by (name, company_name, avatar_url, role)
       `)
-      .eq('status', 'approved') // ONLY APPROVED in upcoming
-      .gte('date', new Date().toISOString())
+      .eq('status', 'approved')
       .order('date', { ascending: true })
 
     if (!error && data) {
