@@ -9,6 +9,7 @@ export default function AdminCompanies() {
   const [showDocuments, setShowDocuments] = useState(false)
   const [processingId, setProcessingId] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
 
   const updateStatus = async (id, status) => {
     setProcessingId(id)
@@ -27,11 +28,24 @@ export default function AdminCompanies() {
     setSelectedCompany(null)
   }
 
+  const filteredCompanies = companies.filter(c => {
+    const matchesSearch = !searchTerm || (c.nif && c.nif.includes(searchTerm));
+    let matchesStatus = true;
+    if (statusFilter === 'active') {
+      matchesStatus = c.status === 'active' || c.status === 'approved';
+    } else if (statusFilter === 'pending') {
+      matchesStatus = c.status === 'pending_approval' || c.status === 'pending';
+    } else if (statusFilter === 'suspended') {
+      matchesStatus = c.status === 'suspended';
+    }
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="w-full">
         <h1 className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-wine-text dark:text-white mb-6 md:mb-8">{t('admin.companies')}</h1>
         
-        <div className="mb-6">
+        <div className="mb-6 flex flex-col md:flex-row gap-4">
           <input
             type="text"
             placeholder="Pesquisar por NIF..."
@@ -39,6 +53,16 @@ export default function AdminCompanies() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full md:w-1/3 px-4 py-2 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none dark:bg-[#1E1E1E] text-mimu-wine-text dark:text-white"
           />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full md:w-1/4 px-4 py-2 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none dark:bg-[#1E1E1E] text-mimu-wine-text dark:text-white"
+          >
+            <option value="all">Todos os Estados</option>
+            <option value="active">Aprovados</option>
+            <option value="pending">Pendentes</option>
+            <option value="suspended">Suspensos</option>
+          </select>
         </div>
 
         <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -46,10 +70,12 @@ export default function AdminCompanies() {
              <p className="text-mimu-wine-light-text dark:text-gray-300">A carregar empresas...</p>
           ) : companies.length === 0 ? (
              <p className="text-mimu-wine-light-text dark:text-gray-300">Não existem empresas registadas.</p>
+          ) : filteredCompanies.length === 0 ? (
+             <p className="text-mimu-wine-light-text dark:text-gray-300">Nenhuma empresa corresponde aos filtros aplicados.</p>
           ) : (
             <>
              <div className="space-y-4">
-               {companies.filter(c => !searchTerm || (c.nif && c.nif.includes(searchTerm))).map((company) => (
+               {filteredCompanies.map((company) => (
                  <div key={company.id} className="p-4 border rounded-lg">
                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                      <div>
