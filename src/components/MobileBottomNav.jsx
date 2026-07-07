@@ -6,7 +6,7 @@ import { useTheme } from '../context/ThemeContext'
 export default function MobileBottomNav() {
   const { t } = useTranslation()
   const location = useLocation()
-  const { user, isCompany, isProvider } = useAuth()
+  const { user, isCompany, isProvider, isAdmin } = useAuth()
   const { theme } = useTheme()
 
   // Determine Dashboard link based on role
@@ -71,6 +71,9 @@ export default function MobileBottomNav() {
     if (itemPath === '/' && location.pathname !== '/') return false
     return location.pathname.startsWith(itemPath)
   }
+
+  // Admin usa apenas o painel próprio — esconder nav de cliente
+  if (isAdmin) return null
 
   return (
     <div className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t shadow-[0_-8px_30px_rgba(0,0,0,0.12)] pb-safe transition-colors duration-300 backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0F0F0F]/80 border-white/5' : 'bg-mimu-white/80 border-mimu-cream-border/50'}`}>

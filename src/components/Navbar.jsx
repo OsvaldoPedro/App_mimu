@@ -18,7 +18,7 @@ const languages = [
 export default function Navbar() {
   const [langOpen, setLangOpen] = useState(false)
   const { t, i18n } = useTranslation()
-  const { user, isClient, isCompany, isProvider, logout } = useAuth()
+  const { user, isClient, isCompany, isProvider, isAdmin, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { notifications } = useNotifications(user?.id)
   const unreadCount = notifications ? notifications.filter(n => !n.read).length : 0
@@ -36,7 +36,7 @@ export default function Navbar() {
     ) : null
   ) : null;
 
-  const dashboardPath = isCompany ? "/empresa" : isProvider ? "/prestador" : "/painel";
+  const dashboardPath = isAdmin ? '/admin' : (isCompany ? "/empresa" : isProvider ? "/prestador" : "/painel");
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-mimu-wine/75 dark:bg-[#121212]/75 backdrop-blur-xl shadow-lg border-b border-mimu-wine-light/10 dark:border-white/5 transition-colors duration-300">
@@ -50,23 +50,27 @@ export default function Navbar() {
           </div>
 
           <div className="hidden lg:flex items-center gap-6">
-            <Link to="/servicos" className="text-mimu-white-text/90 hover:text-mimu-gold transition-colors font-medium">
-              Reservas
-            </Link>
-            <Link to="/eventos" className="text-mimu-white-text/90 hover:text-mimu-gold transition-colors font-medium">
-              Eventos MKT360
-            </Link>
-            {user && (
-              <Link to="/meus-tickets" className="text-mimu-white-text/90 hover:text-mimu-gold transition-colors font-medium">
-                Meus Tickets
-              </Link>
+            {!isAdmin && (
+              <>
+                <Link to="/servicos" className="text-mimu-white-text/90 hover:text-mimu-gold transition-colors font-medium">
+                  Reservas
+                </Link>
+                <Link to="/eventos" className="text-mimu-white-text/90 hover:text-mimu-gold transition-colors font-medium">
+                  Eventos MKT360
+                </Link>
+                {user && (
+                  <Link to="/meus-tickets" className="text-mimu-white-text/90 hover:text-mimu-gold transition-colors font-medium">
+                    Meus Tickets
+                  </Link>
+                )}
+                <Link to="/sobre-mimu" className="text-mimu-white-text/90 hover:text-mimu-gold transition-colors font-medium">
+                  Sobre
+                </Link>
+                <Link to="/suporte" className="text-mimu-white-text/90 hover:text-mimu-gold transition-colors font-medium">
+                  Ajuda
+                </Link>
+              </>
             )}
-            <Link to="/sobre-mimu" className="text-mimu-white-text/90 hover:text-mimu-gold transition-colors font-medium">
-              Sobre
-            </Link>
-            <Link to="/suporte" className="text-mimu-white-text/90 hover:text-mimu-gold transition-colors font-medium">
-              Ajuda
-            </Link>
 
             {/* Theme Toggle Button */}
             <button

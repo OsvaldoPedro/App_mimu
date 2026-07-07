@@ -62,7 +62,14 @@ function AppRoutes() {
   const location = useLocation()
   const navigate = useNavigate()
   const { theme } = useTheme()
-  const { user } = useAuth() // Precisamos do user para saber a role
+  const { user, isAdmin } = useAuth() // Precisamos do user para saber a role
+
+  // Redirecionar o administrador para o painel se tentar aceder a páginas de cliente
+  useEffect(() => {
+    if (isAdmin && !location.pathname.startsWith('/admin')) {
+      navigate('/admin', { replace: true })
+    }
+  }, [isAdmin, location.pathname, navigate])
 
   useEffect(() => {
     // 1. Deteção de Magic Links ou Confirmação de E-mail

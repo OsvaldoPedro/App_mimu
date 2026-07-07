@@ -14,6 +14,7 @@ import { supabase } from '../../config/supabaseClient'
 import toast from 'react-hot-toast'
 import { updateOrderStatus } from '../../hooks/useOrders'
 import { useWallet } from '../../hooks/useWallet'
+import { useCompanyPartners } from '../../hooks/useCompanyPartners'
 
 const statusLabels = { pendente: 'Pendente', aceite: 'Aceite', em_curso: 'Em curso', concluido: 'Concluído', cancelado: 'Cancelado' }
 const paymentLabels = { pendente: 'Pendente', aguardando: 'Aguardando Confirmação', confirmado: 'Confirmado', pago_50: 'Pago 50%', pago: 'Pago' }
@@ -84,7 +85,6 @@ export default function CompanyDashboard() {
   const { orders, reload } = useOrdersByCompany(user?.id)
   const [companyServices, setCompanyServices] = useState([])
   const [servicesLoading, setServicesLoading] = useState(false)
-  const [partners, setPartners] = useState([])
   const [partnerForm, setPartnerForm] = useState({
     id: null,
     name: '',
@@ -94,6 +94,9 @@ export default function CompanyDashboard() {
     status: 'active'
   })
   const [partnerError, setPartnerError] = useState('')
+
+  // Parceiros/Prestadores da empresa guardados na BD
+  const { partners, createPartner, updatePartner, deletePartner, loadPartners } = useCompanyPartners(user?.id)
 
   // Selected order & client profile details
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -116,20 +119,13 @@ export default function CompanyDashboard() {
     }
   }, [user?.id, getCompanyServices, activeMainTab])
 
-  const loadPartners = () => {
-    if (!user?.id) {
-      setPartners([])
-      return
-    }
-    const all = storage.get(KEYS.USERS, [])
-    setPartners(all.filter(u => u.role === 'provider' && u.companyId === user.id))
-  }
+
 
   useEffect(() => {
     if (activeMainTab === 'parceiros') {
       loadPartners()
     }
-  }, [activeMainTab, user?.id])
+  }, [activeMainTab, user?.id, loadPartners])
 
   // Fetch client details when selectedOrder changes
   useEffect(() => {
@@ -194,62 +190,43 @@ export default function CompanyDashboard() {
       id: partner.id,
       name: partner.name || '',
       phone: partner.phone || '',
-      categoryId: partner.categoryId || '',
+      categoryId: partner.category_id || '',
       photo: partner.photo || '',
       status: partner.status || 'active'
     })
     setPartnerError('')
   }
 
-  const handlePartnerSubmit = (e) => {
+  const handlePartnerSubmit = async (e) => {
     e.preventDefault()
     if (!partnerForm.name.trim() || !partnerForm.phone.trim() || !partnerForm.categoryId) {
       setPartnerError('Nome, telefone e categoria são obrigatórios.')
       return
     }
-    const users = storage.get(KEYS.USERS, [])
-    if (partnerForm.id) {
-      const idx = users.findIndex(u => u.id === partnerForm.id && u.companyId === user.id)
-      if (idx === -1) {
-        setPartnerError('Parceiro não encontrado.')
-        return
-      }
-      users[idx] = {
-        ...users[idx],
-        name: partnerForm.name.trim(),
-        phone: partnerForm.phone.trim(),
-        categoryId: partnerForm.categoryId,
-        photo: partnerForm.photo || null,
-        status: partnerForm.status || 'active'
-      }
-    } else {
-      const id = 'prv_' + Date.now()
-      const newPartner = {
-        id,
-        role: 'provider',
-        companyId: user.id,
-        name: partnerForm.name.trim(),
-        phone: partnerForm.phone.trim(),
-        categoryId: partnerForm.categoryId,
-        photo: partnerForm.photo || null,
-        status: partnerForm.status || 'active'
-      }
-      users.push(newPartner)
+    const payload = {
+      name: partnerForm.name.trim(),
+      phone: partnerForm.phone.trim(),
+      category_id: partnerForm.categoryId,
+      photo: partnerForm.photo || null,
+      status: partnerForm.status || 'active'
     }
-    storage.set(KEYS.USERS, users)
-    loadPartners()
-    resetPartnerForm()
+    let result
+    if (partnerForm.id) {
+      result = await updatePartner(partnerForm.id, payload)
+    } else {
+      result = await createPartner(payload)
+    }
+    if (result.success) {
+      toast.success(partnerForm.id ? 'Parceiro atualizado!' : 'Parceiro adicionado!')
+      resetPartnerForm()
+    } else {
+      setPartnerError(result.error || 'Erro ao guardar parceiro.')
+    }
   }
 
-  const togglePartnerStatus = (partnerId) => {
-    const users = storage.get(KEYS.USERS, [])
-    const idx = users.findIndex(u => u.id === partnerId && u.companyId === user?.id)
-    if (idx === -1) return
-    const current = users[idx]
-    const nextStatus = current.status === 'active' ? 'inactive' : 'active'
-    users[idx] = { ...current, status: nextStatus }
-    storage.set(KEYS.USERS, users)
-    loadPartners()
+  const togglePartnerStatus = async (partnerId, currentStatus) => {
+    const nextStatus = currentStatus === 'active' ? 'inactive' : 'active'
+    await updatePartner(partnerId, { status: nextStatus })
   }
 
   return (
@@ -582,7 +559,7 @@ export default function CompanyDashboard() {
                           <div>
                             <p className="text-sm font-medium text-mimu-wine-text dark:text-white">{p.name}</p>
                             <p className="text-xs text-mimu-wine-light-text dark:text-gray-300/80">
-                              {p.phone} • {categories.find(c => c.id === p.categoryId)?.name || p.categoryId || 'Sem categoria'}
+                              {p.phone} • {categories.find(c => c.id === p.category_id)?.name || p.category_id || 'Sem categoria'}
                             </p>
                           </div>
                         </div>
@@ -598,7 +575,7 @@ export default function CompanyDashboard() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => togglePartnerStatus(p.id)}
+                            onClick={() => togglePartnerStatus(p.id, p.status)}
                             className="px-3 py-1 rounded-lg text-xs font-medium border-2 border-mimu-gold text-mimu-gold hover:bg-mimu-gold/10"
                           >
                             {p.status === 'active' ? 'Desativar' : 'Ativar'}

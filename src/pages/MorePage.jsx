@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function MorePage() {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const currentYear = new Date().getFullYear()
 
   const options = [
@@ -20,10 +20,10 @@ export default function MorePage() {
       image: 'https://images.unsplash.com/photo-1534536281715-e28d76689b4d?w=600&q=80',
       delay: '100ms'
     },
-    ...(user ? [{
+    ...(user && !isAdmin ? [{
       title: 'Os Meus Tickets',
       path: '/meus-tickets',
-      icon: '🎟️',
+      icon: '🎫',
       image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80',
       delay: '150ms'
     }, {
