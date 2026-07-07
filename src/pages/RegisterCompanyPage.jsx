@@ -172,8 +172,7 @@ export default function RegisterCompanyPage() {
         navigate('/verificar-otp', { state: { email: form.email } });
       } else {
         toast.success('Conta de Empresa criada e aguarda aprovação!')
-        const target = user?.role === 'company' ? '/empresa' : user?.role === 'provider' ? '/prestador' : user?.role === 'admin' ? '/admin' : '/painel'
-        navigate(target, { replace: true })
+        navigate('/empresa', { replace: true })
       }
     } else {
       setError(result.error)

@@ -89,8 +89,7 @@ export default function RegisterClientPage() {
         // Fallback: Se o Supabase por algum motivo retornar que o email não precisa de confirmação
         // Vamos forçar a navegação para que o utilizador não fique preso!
         toast.success(t('register.accountCreatedSuccess', 'Conta criada com sucesso! Bem-vindo(a).'))
-        const target = user?.role === 'company' ? '/empresa' : user?.role === 'provider' ? '/prestador' : user?.role === 'admin' ? '/admin' : '/painel'
-        navigate(target, { replace: true })
+        navigate('/painel', { replace: true })
       }
     } else {
       setError(result.error)

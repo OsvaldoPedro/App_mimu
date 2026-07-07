@@ -27,6 +27,7 @@ const LocalSpinner = () => (
 
 export default function CompanyDashboard() {
   const navigate = useNavigate()
+  const { user, logout } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   
@@ -79,7 +80,6 @@ export default function CompanyDashboard() {
     return () => supabase.removeChannel(channel)
   }, [user?.id])
 
-  const { user, logout } = useAuth()
   const { getCompanyServices } = useServices()
   const { orders, reload } = useOrdersByCompany(user?.id)
   const [companyServices, setCompanyServices] = useState([])
