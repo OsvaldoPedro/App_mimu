@@ -333,7 +333,14 @@ export default function EventsManager({ userId, role }) {
       activity_type: form.activity_type,
       category: form.category,
       additional_info: form.additional_info,
-      mkt360_event_id: finalMktEventId
+      mkt360_event_id: finalMktEventId,
+      ticket_types: ticketBatches.map(b => ({
+        id: b.id || `tkt_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        name: b.name || 'Geral',
+        price: b.price === '0' || b.price === 0 || !b.price ? 'Grátis' : String(b.price),
+        quantity: parseInt(b.quantity, 10) || 100,
+        description: b.description || ''
+      }))
     }
 
     const res = await createEvent(payload)

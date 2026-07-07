@@ -9,7 +9,9 @@ import { createAppyPayment, getAppyPaymentStatus, cancelAppyPayment } from '../h
 export default function EventDetailsModal({ event, onClose }) {
   const { user } = useAuth()
   const { theme } = useTheme()
-  const { event: detailedEvent, loading: loadingDetails, error: errorDetails } = useMKT360EventDetails(event?.id)
+  // Use mkt360_event_id for GoTicket lookup; local events without it skip the external call
+  const mktEventId = event?.mkt360_event_id || null
+  const { event: detailedEvent, loading: loadingDetails, error: errorDetails } = useMKT360EventDetails(mktEventId)
 
   const [localImageUrl, setLocalImageUrl] = useState(null)
 
@@ -95,7 +97,9 @@ export default function EventDetailsModal({ event, onClose }) {
   }, [activePayment?.id])
 
   // Extrair lotes de tickets
-  const rawTicketTypes = detailedEvent?.ticket_types || detailedEvent?.tickets || detailedEvent?.batches || []
+  // Priority: GoTicket detailed data > local event ticket_types/batches > default fallback
+  const rawTicketTypes = detailedEvent?.ticket_types || detailedEvent?.tickets || detailedEvent?.batches
+    || event?.ticket_types || event?.batches || []
   
   // Garantir que temos pelo menos um tipo de bilhete
   const ticketTypes = !event ? [] : (rawTicketTypes.length > 0 ? rawTicketTypes : [

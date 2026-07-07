@@ -1,46 +1,19 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useTheme } from '../context/ThemeContext'
-import { useMKT360Events } from '../hooks/useMKT360'
+import { useUpcomingEvents } from '../hooks/useEvents'
 import EventDetailsModal from '../components/EventDetailsModal'
 import OptimizedImage from '../components/common/OptimizedImage'
-import { supabase } from '../config/supabaseClient'
 
 export default function EventsPage() {
   const { t } = useTranslation()
   const { theme } = useTheme()
-  const { events, loading, error, reload } = useMKT360Events()
+  const { events, loading, reload } = useUpcomingEvents()
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
-  const [localImageMap, setLocalImageMap] = useState({})
-
-  useEffect(() => {
-    async function fetchLocalImages() {
-      try {
-        const { data, error } = await supabase
-          .from('events')
-          .select('mkt360_event_id, image_url')
-          .not('mkt360_event_id', 'is', null)
-          .not('image_url', 'is', null)
-        
-        if (!error && data) {
-          const map = {}
-          data.forEach(item => {
-            map[item.mkt360_event_id] = item.image_url
-          })
-          setLocalImageMap(map)
-        }
-      } catch (err) {
-        console.error('Error fetching local images for fallbacks:', err)
-      }
-    }
-    if (events && events.length > 0) {
-      fetchLocalImages()
-    }
-  }, [events])
 
   // Extrair categorias exclusivas presentes nos eventos carregados
   const categories = Array.from(
@@ -144,11 +117,6 @@ export default function EventsPage() {
         </div>
 
         {/* Mensagem de Erro */}
-        {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
-            ⚠️ {error}
-          </div>
-        )}
 
         {/* Grid ou Loader */}
         {loading ? (
@@ -182,19 +150,15 @@ export default function EventsPage() {
             {filteredEvents.map((ev) => {
               const dateVal = ev.date || ev.start_date || ev.created_at
               const dateObj = dateVal ? new Date(dateVal) : new Date()
-              const title = ev.title || ev.name || 'Evento MKT360'
+              const title = ev.title || ev.name || 'Evento'
               const location = ev.location || ev.venue || ev.address || 'Consultar Detalhes'
               const category = ev.category || ev.activity_type || ev.type
-              let rawImageUrl = ev.image_url || localImageMap[ev.id] || ev.banner || ev.image
-              if (rawImageUrl && !rawImageUrl.startsWith('http') && !rawImageUrl.startsWith('data:')) {
-                rawImageUrl = `https://goticket.ao${rawImageUrl.startsWith('/') ? '' : '/'}${rawImageUrl}`
-              }
-              const imageUrl = rawImageUrl
+              const imageUrl = ev.image_url || null
 
               return (
                 <div 
                   key={ev.id} 
-                  onClick={() => setSelectedEvent({ ...ev, image_url: imageUrl })}
+                  onClick={() => setSelectedEvent(ev)}
                   className={`group rounded-2xl overflow-hidden shadow-md cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl border ${theme === 'dark' ? 'bg-[#1E1E1E] border-[#2A2A2A] text-mimu-white-text' : 'bg-white border-transparent'}`}
                 >
                   <div className="h-44 bg-mimu-gray-200 dark:bg-gray-800 relative overflow-hidden">
@@ -243,9 +207,9 @@ export default function EventsPage() {
                       </div>
                       
                       <div className="flex justify-between items-center pt-2">
-                        <span className="text-[10px] font-semibold text-mimu-gold uppercase tracking-wider">MKT360 Integrado</span>
+                        <span className="text-[10px] font-semibold text-mimu-gold uppercase tracking-wider">Mimu Eventos</span>
                         <span className="text-xs px-2.5 py-1 rounded-full bg-mimu-wine/10 text-mimu-wine dark:bg-mimu-gold/10 dark:text-mimu-gold font-semibold">
-                          Comprar Bilhete →
+                          Ver Detalhes →
                         </span>
                       </div>
                     </div>

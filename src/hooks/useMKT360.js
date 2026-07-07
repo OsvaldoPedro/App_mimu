@@ -62,11 +62,17 @@ export function useMKT360Events() {
  */
 export function useMKT360EventDetails(eventId) {
   const [event, setEvent] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!!eventId) // Only loading if we have an external ID
   const [error, setError] = useState(null)
 
   const loadDetails = useCallback(async () => {
-    if (!eventId) return
+    if (!eventId) {
+      // Local-only event: no GoTicket ID, skip external call
+      setLoading(false)
+      setEvent(null)
+      setError(null)
+      return
+    }
     setLoading(true)
     setError(null)
     try {
