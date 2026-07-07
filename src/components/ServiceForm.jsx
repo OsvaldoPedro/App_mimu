@@ -326,7 +326,9 @@ export default function ServiceForm({ initialService, onSubmit, submitLabel = 'G
         >
           <option value="">{catsLoading ? 'A carregar...' : 'Escolher...'}</option>
           {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+            <option key={c.id} value={c.id}>
+              {c.icon && c.icon.length <= 3 ? c.icon + ' ' : ''}{c.name}
+            </option>
           ))}
         </select>
       </div>

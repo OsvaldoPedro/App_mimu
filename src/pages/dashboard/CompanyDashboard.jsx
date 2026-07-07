@@ -511,7 +511,9 @@ export default function CompanyDashboard() {
                     >
                       <option value="" className="bg-mimu-white dark:bg-[#1E1E1E]">Escolher...</option>
                       {categories.map(c => (
-                        <option key={c.id} value={c.id} className="bg-mimu-white dark:bg-[#1E1E1E]">{c.icon} {c.name}</option>
+                        <option key={c.id} value={c.id} className="bg-mimu-white dark:bg-[#1E1E1E]">
+                          {c.icon && c.icon.length <= 3 ? c.icon + ' ' : ''}{c.name}
+                        </option>
                       ))}
                     </select>
                   </div>

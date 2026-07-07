@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { categories } from '../data/categories'
 import OptimizedImage from './common/OptimizedImage'
+import { useCategoriesContext } from '../context/CategoriesContext'
+import DynamicIcon from './common/DynamicIcon'
 
 const categoryStyles = {
   estadia: 'from-blue-900/90 to-blue-800/80',
@@ -32,7 +34,8 @@ const categoryImages = {
 
 export default function CategoryHeader({ categoryId, title, showSearch = true, search = '', onSearch }) {
   const { t } = useTranslation()
-  const category = categories.find(c => c.id === categoryId) || categories[0]
+  const { categories: dbCategories } = useCategoriesContext()
+  const category = dbCategories.find(c => c.id === categoryId) || categories.find(c => c.id === categoryId) || categories[0]
   const styleClass = categoryStyles[categoryId] || categoryStyles.estadia
   const image = categoryImages[categoryId] || categoryImages.estadia
 
@@ -57,8 +60,9 @@ export default function CategoryHeader({ categoryId, title, showSearch = true, s
           <span className="text-mimu-white-text font-medium">{title}</span>
         </nav>
 
-        <h1 className="text-xl md:text-2xl md:text-3xl md:text-4xl lg:text-5xl font-bold text-mimu-white-text mb-2">
-          {category.icon} {title}
+        <h1 className="text-xl md:text-2xl md:text-3xl md:text-4xl lg:text-5xl font-bold text-mimu-white-text mb-2 flex items-center gap-3">
+          <DynamicIcon name={category.icon} className="w-8 h-8 md:w-12 md:h-12 text-current" />
+          <span>{title}</span>
         </h1>
         <p className="text-mimu-white-text/90 max-w-2xl">
           {category.services.slice(0, 4).join(' • ')}

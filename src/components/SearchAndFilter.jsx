@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useCategories } from '../hooks/useCategories'
 import AngolaLocationSelect from './AngolaLocationSelect'
+import DynamicIcon from './common/DynamicIcon'
 
 export default function SearchAndFilter({ 
   selectedCategories = [], 
@@ -68,7 +69,9 @@ export default function SearchAndFilter({
                       : 'bg-mimu-gray-50 dark:bg-[#121212] text-mimu-wine-light-text dark:text-gray-300 border border-mimu-cream-border dark:border-[#2A2A2A] hover:border-mimu-gold hover:text-mimu-gold'
                   }`}
                 >
-                  <span className="mr-2 text-base">{c.icon}</span>
+                  <span className="mr-2 flex items-center justify-center shrink-0">
+                    <DynamicIcon name={c.icon} className="w-4.5 h-4.5 text-current" />
+                  </span>
                   {t(`category.${c.id}`, c.name)}
                 </button>
               );
