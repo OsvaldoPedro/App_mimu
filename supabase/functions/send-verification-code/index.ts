@@ -101,17 +101,18 @@ serve(async (req) => {
     }
 
     const smsMessage = `[Mimu] O seu codigo de verificacao e: ${code}. Valido por 5 minutos. Nao partilhe este codigo.`
+    const formattedRecipient = `+${phone}` // CastBrick e.g. +244923000000
 
-    const smsRes = await fetch('https://api.castbrick.com/api/v1/sms/send', {
+    const smsRes = await fetch('https://api.castbrick.co/sms/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${CASTBRICK_API_KEY}`,
       },
       body: JSON.stringify({
-        to: phone,
-        message: smsMessage,
-        sender_id: 'Mimu',
+        recipients: [formattedRecipient],
+        content: smsMessage,
+        senderId: 'Mimu',
       }),
     })
 
