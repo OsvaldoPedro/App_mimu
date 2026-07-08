@@ -1,31 +1,96 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useTheme } from '../context/ThemeContext'
 import { useUpcomingEvents } from '../hooks/useEvents'
+import { useMKT360Events } from '../hooks/useMKT360'
 import EventDetailsModal from '../components/EventDetailsModal'
 import OptimizedImage from '../components/common/OptimizedImage'
 
 export default function EventsPage() {
   const { t } = useTranslation()
   const { theme } = useTheme()
-  const { events, loading, reload } = useUpcomingEvents()
+
+  // Fonte 1: Eventos locais Mimu (Supabase) — aprovados
+  const { events: localEvents, loading: loadingLocal, reload: reloadLocal } = useUpcomingEvents()
+
+  // Fonte 2: Eventos do GoTicket / MKT360 (externos)
+  const { events: goticketEvents, loading: loadingGoTicket, reload: reloadGoTicket } = useMKT360Events()
+
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
 
-  // Extrair categorias exclusivas presentes nos eventos carregados
+  const loading = loadingLocal || loadingGoTicket
+
+  const reload = useCallback(() => {
+    reloadLocal()
+    reloadGoTicket()
+  }, [reloadLocal, reloadGoTicket])
+
+  // Combinar e deduplicar:
+  // - Eventos locais têm prioridade (contêm imagens, ticket_types, mkt360_event_id)
+  // - Eventos do GoTicket que já existem localmente (via mkt360_event_id) são ignorados
+  const mergedEvents = React.useMemo(() => {
+    // IDs do GoTicket já presentes localmente
+    const localMktIds = new Set(
+      localEvents
+        .map(e => e.mkt360_event_id)
+        .filter(Boolean)
+        .map(String)
+    )
+
+    // Eventos GoTicket que NÃO existem localmente
+    const goticketOnly = (goticketEvents || [])
+      .filter(ev => {
+        const evId = String(ev.id || ev.event_id || '')
+        return evId && !localMktIds.has(evId)
+      })
+      .map(ev => ({
+        ...ev,
+        _source: 'goticket',
+        // Normalizar campos para o mesmo formato
+        title: ev.title || ev.name || 'Evento GoTicket',
+        location: ev.location || ev.venue || ev.address || '',
+        // GoTicket usa `event_date` como campo principal
+        date: ev.event_date || ev.date || ev.start_date || ev.created_at,
+        category: ev.category || ev.activity_type || ev.type,
+        image_url: (() => {
+          let url = ev.image_url || ev.banner || ev.image
+          if (!url) return null
+          if (url.startsWith('http') || url.startsWith('data:')) return url
+          // Caminho relativo da GoTicket: ex. "assets/img/default-event.jpg"
+          return `https://goticket.ao/${url.startsWith('/') ? url.slice(1) : url}`
+        })(),
+        // Guardar o id original do GoTicket para o modal usar
+        mkt360_event_id: ev.id || ev.event_id || null,
+      }))
+
+    // Eventos locais com _source marcado
+    const localMarked = (localEvents || []).map(ev => ({ ...ev, _source: 'mimu' }))
+
+    // Juntar e ordenar por data
+    const all = [...localMarked, ...goticketOnly]
+    all.sort((a, b) => {
+      const da = a.date ? new Date(a.date) : new Date(0)
+      const db = b.date ? new Date(b.date) : new Date(0)
+      return da - db
+    })
+    return all
+  }, [localEvents, goticketEvents])
+
+  // Extrair categorias únicas
   const categories = Array.from(
     new Set(
-      events
-        .map((ev) => ev.category || ev.activity_type || ev.type)
+      mergedEvents
+        .map(ev => ev.category || ev.activity_type || ev.type)
         .filter(Boolean)
     )
   )
 
-  // Filtragem no frontend
-  const filteredEvents = events.filter((ev) => {
+  // Filtrar por pesquisa e categoria
+  const filteredEvents = mergedEvents.filter(ev => {
     const title = ev.title || ev.name || ''
     const location = ev.location || ev.venue || ev.address || ''
     const category = ev.category || ev.activity_type || ev.type || 'Geral'
@@ -53,7 +118,7 @@ export default function EventsPage() {
               {t('events.pageTitle', 'Agenda de Eventos')}
             </h1>
             <p className={`font-medium mt-2 transition-colors ${theme === 'dark' ? 'text-mimu-text-muted' : 'text-mimu-wine-light-text dark:text-gray-300/80'}`}>
-              {t('events.pageSubtitle', 'Adquira bilhetes e assista aos melhores eventos em parceria com a MKT360.')}
+              {t('events.pageSubtitle', 'Eventos da Mimu e do GoTicket, tudo num só lugar.')}
             </p>
           </div>
           
@@ -116,8 +181,6 @@ export default function EventsPage() {
           </div>
         </div>
 
-        {/* Mensagem de Erro */}
-
         {/* Grid ou Loader */}
         {loading ? (
           /* Modern Shimmer Loading Grid */
@@ -134,18 +197,18 @@ export default function EventsPage() {
             ))}
           </div>
         ) : filteredEvents.length === 0 ? (
-          /* Empty State elegantly styled */
+          /* Empty State */
           <div className="flex flex-col items-center justify-center min-h-[40vh] px-4 text-center">
             <div className="w-20 h-20 mb-6 flex items-center justify-center bg-mimu-gold/10 text-mimu-gold rounded-full">
               <span className="text-3xl">📅</span>
             </div>
-            <h2 className="text-xl font-bold mb-2">{t('events.emptyTitle', 'Nenhum evento agendado')}</h2>
+            <h2 className="text-xl font-bold mb-2">{t('events.emptyTitle', 'Nenhum evento encontrado')}</h2>
             <p className="text-mimu-wine-light-text dark:text-gray-400 max-w-sm mx-auto">
               {t('events.emptyText', 'De momento não foram encontrados eventos correspondentes aos filtros ativos.')}
             </p>
           </div>
         ) : (
-          /* Dynamically rendered cards grid */
+          /* Grid de eventos */
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredEvents.map((ev) => {
               const dateVal = ev.date || ev.start_date || ev.created_at
@@ -154,10 +217,11 @@ export default function EventsPage() {
               const location = ev.location || ev.venue || ev.address || 'Consultar Detalhes'
               const category = ev.category || ev.activity_type || ev.type
               const imageUrl = ev.image_url || null
+              const isGoTicket = ev._source === 'goticket'
 
               return (
                 <div 
-                  key={ev.id} 
+                  key={ev.id || ev.event_id || Math.random()} 
                   onClick={() => setSelectedEvent(ev)}
                   className={`group rounded-2xl overflow-hidden shadow-md cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl border ${theme === 'dark' ? 'bg-[#1E1E1E] border-[#2A2A2A] text-mimu-white-text' : 'bg-white border-transparent'}`}
                 >
@@ -207,7 +271,9 @@ export default function EventsPage() {
                       </div>
                       
                       <div className="flex justify-between items-center pt-2">
-                        <span className="text-[10px] font-semibold text-mimu-gold uppercase tracking-wider">Mimu Eventos</span>
+                        <span className="text-[10px] font-semibold text-mimu-gold uppercase tracking-wider">
+                          {isGoTicket ? 'GoTicket' : 'Mimu'}
+                        </span>
                         <span className="text-xs px-2.5 py-1 rounded-full bg-mimu-wine/10 text-mimu-wine dark:bg-mimu-gold/10 dark:text-mimu-gold font-semibold">
                           Ver Detalhes →
                         </span>
@@ -232,4 +298,3 @@ export default function EventsPage() {
     </div>
   )
 }
-

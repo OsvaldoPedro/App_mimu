@@ -39,8 +39,8 @@ export function useMKT360Events() {
         throw new Error(msg)
       }
 
-      // Tratar dados de resposta. Geralmente a API retorna { events: [...] } ou array direto.
-      const list = data?.events || data || []
+      // Tratar dados de resposta. A GoTicket retorna { value: [...], Count: N }
+      const list = data?.value || data?.events || data?.data || (Array.isArray(data) ? data : [])
       setEvents(list)
     } catch (err) {
       console.error('Erro ao carregar eventos MKT360:', err)
