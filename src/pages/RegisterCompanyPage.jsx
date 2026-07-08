@@ -220,39 +220,41 @@ export default function RegisterCompanyPage() {
           {error && <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-xl text-sm">{error}</div>}
 
           {showOtp ? (
-            <PhoneOTPVerification
-              phone={phoneToVerify}
-              sendCodeHook={phoneVerification}
-              onCancel={() => setShowOtp(false)}
-              onVerifySuccess={async () => {
-                // Proceder com a criação da conta após OTP verificado
-                setLoading(true)
-                const result = await registerCompany({
-                  companyName: form.companyName,
-                  email: form.email,
-                  nif: form.nif,
-                  phone: phoneToVerify,
-                  password: form.password,
-                  province: form.province,
-                  city: form.city,
-                  description: form.description,
-                  categoryId: form.categoryId,
-                  serviceTypes: form.serviceTypes,
-                  hours: form.hours,
-                  documents
-                })
-                setLoading(false)
-                if (result.success) {
-                  toast.success('Conta de Empresa criada e aguarda aprovação!')
-                  navigate('/empresa', { replace: true })
-                } else {
-                  setError(result.error)
-                  setShowOtp(false)
-                }
-              }}
-            />
+            <div key="stage-otp" className="animate-fade-in">
+              <PhoneOTPVerification
+                phone={phoneToVerify}
+                sendCodeHook={phoneVerification}
+                onCancel={() => setShowOtp(false)}
+                onVerifySuccess={async () => {
+                  // Proceder com a criação da conta após OTP verificado
+                  setLoading(true)
+                  const result = await registerCompany({
+                    companyName: form.companyName,
+                    email: form.email,
+                    nif: form.nif,
+                    phone: phoneToVerify,
+                    password: form.password,
+                    province: form.province,
+                    city: form.city,
+                    description: form.description,
+                    categoryId: form.categoryId,
+                    serviceTypes: form.serviceTypes,
+                    hours: form.hours,
+                    documents
+                  })
+                  setLoading(false)
+                  if (result.success) {
+                    toast.success('Conta de Empresa criada e aguarda aprovação!')
+                    navigate('/empresa', { replace: true })
+                  } else {
+                    setError(result.error)
+                    setShowOtp(false)
+                  }
+                }}
+              />
+            </div>
           ) : (
-            <form onSubmit={handleRegister} className="space-y-4">
+            <form key="stage-form" onSubmit={handleRegister} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('company.companyName')}</label>
               <input name="companyName" value={form.companyName} onChange={handleChange} required
