@@ -318,7 +318,7 @@ export function AuthProvider({ children }) {
       }
 
       // 1. Sign up on Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp(authPayload)
+      let { data: authData, error: authError } = await supabase.auth.signUp(authPayload)
 
       if (authError) {
         console.error("Auth Error:", authError)
@@ -327,6 +327,20 @@ export function AuthProvider({ children }) {
 
       if (!authData || !authData.user) {
         return { success: false, error: isPhoneSignup ? 'Ocorreu um erro ou este número de telefone já está em uso na plataforma.' : 'Ocorreu um erro ou este e-mail já está em uso na plataforma. Tente recuperar a palavra-passe ou usar outro e-mail.' }
+      }
+
+      // Se for registo por telefone, forçar login para obter a sessão ativa imediatamente
+      let activeSession = authData.session;
+      if (isPhoneSignup && !activeSession) {
+        try {
+          const { data: loginData } = await supabase.auth.signInWithPassword(authPayload);
+          if (loginData?.session) {
+            activeSession = loginData.session;
+            authData = { ...authData, session: loginData.session };
+          }
+        } catch (err) {
+          console.warn("Falha ao forçar login automático de telefone:", err);
+        }
       }
 
       const authUserId = authData.user.id
@@ -406,7 +420,7 @@ export function AuthProvider({ children }) {
       }
 
       // Se a sessão estiver ativa (confirmação por email desativada), limpar cache se salvou bem
-      if (!profileError && authData.session) {
+      if (!profileError && activeSession) {
           localStorage.removeItem('pending_mimu_profile');
       }
 
@@ -415,7 +429,7 @@ export function AuthProvider({ children }) {
       }
       
       // Retornar indicativo visual de que precisa de confirmacao (sessao ficaria nulo e o utilizador nulo ou n logado completamente)
-      const requireEmailConfirmation = !authData.session;
+      const requireEmailConfirmation = !activeSession;
 
       return { success: true, requireEmailConfirmation, user: authData.user }
     } catch (err) {
