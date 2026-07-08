@@ -50,7 +50,7 @@ export default function Hero() {
   }
 
   return (
-    <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 md:pt-32 lg:pt-36 pb-8">
+    <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 md:pt-24 lg:pt-28 pb-8">
       {/* Banner Card Container */}
       <div className="relative overflow-hidden rounded-3xl aspect-[4/3] xs:aspect-[16/10] sm:aspect-[21/9] min-h-[260px] xs:min-h-[300px] sm:min-h-[440px] shadow-2xl border border-mimu-cream-border/10 dark:border-[#2A2A2A]">
         {/* Background Image Carousel with smooth fade transitions */}
