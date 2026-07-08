@@ -11,6 +11,8 @@ import DocumentUploadBox from '../components/DocumentUploadBox'
 import { enforceNumeric, enforceAlphanumericText, isValidEmail, enforceNIF, isValidNIF } from '../utils/validation'
 import { toast } from 'react-hot-toast'
 import { getRequiredDocuments, getDocumentConfig } from '../utils/documentRequirements'
+import { usePhoneVerification } from '../hooks/usePhoneVerification'
+import PhoneOTPVerification from '../components/PhoneOTPVerification'
 
 export default function RegisterCompanyPage() {
   const { t } = useTranslation()
@@ -29,6 +31,10 @@ export default function RegisterCompanyPage() {
   const { registerCompany, user } = useAuth()
   const navigate = useNavigate()
   const { categories, loading: catsLoading } = useCategories()
+  const phoneVerification = usePhoneVerification()
+
+  const [showOtp, setShowOtp] = useState(false)
+  const [phoneToVerify, setPhoneToVerify] = useState('')
 
   useEffect(() => {
     if (user) {
@@ -147,13 +153,27 @@ export default function RegisterCompanyPage() {
       return
     }
 
+    const phoneVal = isPhone ? cleanPhone : form.phone
+
+    // Se for registo por telefone, verificar primeiro por SMS OTP
+    if (isPhone && !showOtp) {
+      setPhoneToVerify(cleanPhone)
+      setLoading(true)
+      const res = await phoneVerification.sendCode(cleanPhone)
+      setLoading(false)
+      if (res.success) {
+        setShowOtp(true)
+      }
+      return
+    }
+
     setLoading(true)
     
     const result = await registerCompany({
       companyName: form.companyName,
       email: form.email,
       nif: form.nif,
-      phone: isPhone ? cleanPhone : form.phone,
+      phone: phoneVal,
       password: form.password,
       province: form.province,
       city: form.city,
@@ -199,7 +219,40 @@ export default function RegisterCompanyPage() {
 
           {error && <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-xl text-sm">{error}</div>}
 
-          <form onSubmit={handleRegister} className="space-y-4">
+          {showOtp ? (
+            <PhoneOTPVerification
+              phone={phoneToVerify}
+              sendCodeHook={phoneVerification}
+              onCancel={() => setShowOtp(false)}
+              onVerifySuccess={async () => {
+                // Proceder com a criação da conta após OTP verificado
+                setLoading(true)
+                const result = await registerCompany({
+                  companyName: form.companyName,
+                  email: form.email,
+                  nif: form.nif,
+                  phone: phoneToVerify,
+                  password: form.password,
+                  province: form.province,
+                  city: form.city,
+                  description: form.description,
+                  categoryId: form.categoryId,
+                  serviceTypes: form.serviceTypes,
+                  hours: form.hours,
+                  documents
+                })
+                setLoading(false)
+                if (result.success) {
+                  toast.success('Conta de Empresa criada e aguarda aprovação!')
+                  navigate('/empresa', { replace: true })
+                } else {
+                  setError(result.error)
+                  setShowOtp(false)
+                }
+              }}
+            />
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('company.companyName')}</label>
               <input name="companyName" value={form.companyName} onChange={handleChange} required
@@ -335,7 +388,8 @@ export default function RegisterCompanyPage() {
               className="w-full py-4 bg-mimu-gold hover:bg-mimu-gold-hover text-mimu-wine-text dark:text-white font-bold rounded-xl transition-colors disabled:opacity-50 transition-all duration-300 hover:shadow-md active:scale-95">
               {loading ? 'A criar conta...' : 'Criar Conta de Empresa'}
             </button>
-          </form>
+            </form>
+          )}
           
         </div>
       </main>

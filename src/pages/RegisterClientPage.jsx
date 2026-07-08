@@ -7,6 +7,8 @@ import Footer from '../components/Footer'
 
 import { enforceNumeric, enforceAlphaText, isValidEmail } from '../utils/validation'
 import { toast } from 'react-hot-toast'
+import { usePhoneVerification } from '../hooks/usePhoneVerification'
+import PhoneOTPVerification from '../components/PhoneOTPVerification'
 
 export default function RegisterClientPage() {
   const { t } = useTranslation()
@@ -19,6 +21,10 @@ export default function RegisterClientPage() {
   
   const { registerClient, user } = useAuth()
   const navigate = useNavigate()
+  const phoneVerification = usePhoneVerification()
+
+  const [showOtp, setShowOtp] = useState(false)
+  const [phoneToVerify, setPhoneToVerify] = useState('')
 
   useEffect(() => {
     if (user) {
@@ -70,12 +76,26 @@ export default function RegisterClientPage() {
       return
     }
 
+    const phoneVal = isPhone ? cleanPhone : form.phone
+    
+    // Se for registo por telefone, verificar primeiro por SMS OTP
+    if (isPhone && !showOtp) {
+      setPhoneToVerify(cleanPhone)
+      setLoading(true)
+      const res = await phoneVerification.sendCode(cleanPhone)
+      setLoading(false)
+      if (res.success) {
+        setShowOtp(true)
+      }
+      return
+    }
+
     setLoading(true)
     
     const result = await registerClient({
       name: form.name,
       email: form.email,
-      phone: isPhone ? cleanPhone : form.phone,
+      phone: phoneVal,
       password: form.password
     })
     
@@ -110,40 +130,66 @@ export default function RegisterClientPage() {
 
           {error && <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-xl text-sm">{error}</div>}
 
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('register.name', 'Nome Completo')}</label>
-              <input name="name" value={form.name} onChange={handleChange} required
-                className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('auth.emailPhoneLabel', 'E-mail / Telefone')}</label>
-              <input name="email" type="text" value={form.email} onChange={handleChange} required placeholder={t('auth.emailPhonePlaceholder', 'Digite seu e-mail ou telefone')}
-                className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
-            </div>
+          {showOtp ? (
+            <PhoneOTPVerification
+              phone={phoneToVerify}
+              sendCodeHook={phoneVerification}
+              onCancel={() => setShowOtp(false)}
+              onVerifySuccess={async () => {
+                // Proceder com a criação da conta após OTP verificado
+                setLoading(true)
+                const result = await registerClient({
+                  name: form.name,
+                  email: form.email,
+                  phone: phoneToVerify,
+                  password: form.password
+                })
+                setLoading(false)
+                if (result.success) {
+                  toast.success(t('register.accountCreatedSuccess', 'Conta criada com sucesso! Bem-vindo(a).'))
+                  navigate('/painel', { replace: true })
+                } else {
+                  setError(result.error)
+                  setShowOtp(false)
+                }
+              }}
+            />
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('register.name', 'Nome Completo')}</label>
+                <input name="name" value={form.name} onChange={handleChange} required
+                  className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('auth.emailPhoneLabel', 'E-mail / Telefone')}</label>
+                <input name="email" type="text" value={form.email} onChange={handleChange} required placeholder={t('auth.emailPhonePlaceholder', 'Digite seu e-mail ou telefone')}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('auth.passwordLabel', 'Palavra-passe')}</label>
-              <input name="password" type="password" placeholder={t('auth.passwordPlaceholder', '••••••••')} value={form.password} onChange={handleChange} required
-                className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('register.confirmPassword', 'Confirmar palavra-passe')}</label>
-              <input name="confirmPassword" type="password" placeholder={t('auth.passwordPlaceholder', '••••••••')} value={form.confirmPassword} onChange={handleChange} required
-                className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('auth.passwordLabel', 'Palavra-passe')}</label>
+                <input name="password" type="password" placeholder={t('auth.passwordPlaceholder', '••••••••')} value={form.password} onChange={handleChange} required
+                  className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('register.confirmPassword', 'Confirmar palavra-passe')}</label>
+                <input name="confirmPassword" type="password" placeholder={t('auth.passwordPlaceholder', '••••••••')} value={form.confirmPassword} onChange={handleChange} required
+                  className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
+              </div>
 
-            <p className="text-xs text-mimu-wine-light-text dark:text-gray-300/80 mt-4 mb-4">
-              {t('register.termsConsent', 'Ao criar a sua conta, está a consentir com os nossos')}{' '}
-              <Link to="/termos-de-uso" className="text-mimu-gold hover:underline font-semibold" target="_blank">{t('register.termsOfUse', 'Termos de Uso')}</Link> {t('register.and', 'e')}{' '}
-              <Link to="/politica-privacidade" className="text-mimu-gold hover:underline font-semibold" target="_blank">{t('register.privacyPolicy', 'Política de Privacidade')}</Link>.
-            </p>
+              <p className="text-xs text-mimu-wine-light-text dark:text-gray-300/80 mt-4 mb-4">
+                {t('register.termsConsent', 'Ao criar a sua conta, está a consentir com os nossos')}{' '}
+                <Link to="/termos-de-uso" className="text-mimu-gold hover:underline font-semibold" target="_blank">{t('register.termsOfUse', 'Termos de Uso')}</Link> {t('register.and', 'e')}{' '}
+                <Link to="/politica-privacidade" className="text-mimu-gold hover:underline font-semibold" target="_blank">{t('register.privacyPolicy', 'Política de Privacidade')}</Link>.
+              </p>
 
-            <button type="submit" disabled={loading}
-              className="w-full py-4 bg-mimu-gold hover:bg-mimu-gold-hover text-mimu-wine-text dark:text-white font-bold rounded-xl transition-colors disabled:opacity-50 transition-all duration-300 hover:shadow-md active:scale-95">
-              {loading ? t('register.creatingAccount', 'A criar conta...') : t('register.createAccountBtn', 'Criar Conta')}
-            </button>
-          </form>
+              <button type="submit" disabled={loading}
+                className="w-full py-4 bg-mimu-gold hover:bg-mimu-gold-hover text-mimu-wine-text dark:text-white font-bold rounded-xl transition-colors disabled:opacity-50 transition-all duration-300 hover:shadow-md active:scale-95">
+                {loading ? t('register.creatingAccount', 'A criar conta...') : t('register.createAccountBtn', 'Criar Conta')}
+              </button>
+            </form>
+          )}
 
         </div>
       </main>
