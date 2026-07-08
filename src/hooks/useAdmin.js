@@ -57,6 +57,15 @@ export async function rejectUser(userId) {
   return { success: !error }
 }
 
+export async function deleteUser(userId) {
+  const { data, error } = await supabase.rpc('delete_user_by_admin', { user_id: userId })
+  if (error) {
+    console.error("Erro ao apagar utilizador:", error)
+    return { success: false, error: error.message }
+  }
+  return { success: true }
+}
+
 export function useAdminCompanies() {
   const [companies, setCompanies] = useState([])
   const [loading, setLoading] = useState(false)

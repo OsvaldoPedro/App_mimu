@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { useAllUsers, approveUser, rejectUser } from '../../hooks/useAdmin'
+import { useAllUsers, approveUser, rejectUser, deleteUser } from '../../hooks/useAdmin'
 import { sendBroadcastNotification, addNotification } from '../../hooks/useNotifications'
 
 const formatDate = (dateString) => {
@@ -91,6 +91,19 @@ export default function AdminUsersPage() {
     if (!window.confirm("Tens a certeza que queres rejeitar esta conta?")) return
     setProcessing(id)
     await rejectUser(id)
+    await reload()
+    setProcessing(null)
+  }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Tens a certeza absoluta que queres APAGAR esta conta? Todos os dados (serviços, pedidos, etc.) serão eliminados de forma definitiva.")) return
+    setProcessing(id)
+    const result = await deleteUser(id)
+    if (result.success) {
+      alert("Utilizador apagado com sucesso!")
+    } else {
+      alert("Erro ao apagar utilizador: " + result.error)
+    }
     await reload()
     setProcessing(null)
   }
@@ -224,6 +237,13 @@ export default function AdminUsersPage() {
                             </button>
                           </>
                         )}
+                        <button 
+                          disabled={processing === u.id}
+                          onClick={() => handleDelete(u.id)}
+                          className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-medium text-xs disabled:opacity-50"
+                        >
+                          Apagar
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -297,21 +317,41 @@ export default function AdminUsersPage() {
               )}
 
               <div className="mt-8 flex gap-3 justify-end border-t pt-4">
-                 <button 
-                   onClick={() => {
-                     setBroadcastTarget(viewingUser.id)
-                     setShowBroadcastModal(true)
-                   }}
-                   className="px-6 py-2 bg-mimu-gold text-mimu-wine-text dark:text-white text-white rounded font-bold hover:bg-mimu-gold text-mimu-wine-text dark:text-white"
-                 >
-                   📩 Avisar Utilizador
-                 </button>
-                 <button 
-                   onClick={() => setViewingUser(null)}
-                   className="px-6 py-2 bg-mimu-gray-200 text-mimu-text-dark dark:text-white rounded font-bold hover:bg-mimu-gray-200"
-                 >
-                   Fechar
-                 </button>
+                  <button 
+                    disabled={processing === viewingUser.id}
+                    onClick={async () => {
+                      if (window.confirm("Tens a certeza absoluta que queres APAGAR esta conta definitivamente?")) {
+                        setProcessing(viewingUser.id)
+                        const result = await deleteUser(viewingUser.id)
+                        if (result.success) {
+                          alert("Utilizador apagado com sucesso!")
+                          setViewingUser(null)
+                          reload()
+                        } else {
+                          alert("Erro: " + result.error)
+                        }
+                        setProcessing(null)
+                      }
+                    }}
+                    className="px-6 py-2 bg-red-600 text-white rounded font-bold hover:bg-red-700 disabled:opacity-50"
+                  >
+                    🗑️ Apagar Conta
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setBroadcastTarget(viewingUser.id)
+                      setShowBroadcastModal(true)
+                    }}
+                    className="px-6 py-2 bg-mimu-gold text-mimu-wine-text dark:text-white text-white rounded font-bold hover:bg-mimu-gold text-mimu-wine-text dark:text-white"
+                  >
+                    📩 Avisar Utilizador
+                  </button>
+                  <button 
+                    onClick={() => setViewingUser(null)}
+                    className="px-6 py-2 bg-mimu-gray-200 text-mimu-text-dark dark:text-white rounded font-bold hover:bg-mimu-gray-200"
+                  >
+                    Fechar
+                  </button>
               </div>
             </div>
           </div>

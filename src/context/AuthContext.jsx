@@ -134,8 +134,9 @@ export function AuthProvider({ children }) {
         delete data.nifs;
         setUser({ auth_id: userId, ...data, nif: nifValue })
       } else {
-        // Tentar recuperar perfil guardado localmente caso não exista de todo
+        // Tentar recuperar perfil guardado localmente caso não exista de todo (por exemplo, logo após o registo)
         const pendingStr = localStorage.getItem('pending_mimu_profile');
+        let profileRestored = false;
         if (pendingStr) {
            try {
               const pendingProfile = JSON.parse(pendingStr);
@@ -144,6 +145,7 @@ export function AuthProvider({ children }) {
                  if (!upsertError && newDbData) {
                     setUser({ auth_id: userId, ...newDbData });
                     localStorage.removeItem('pending_mimu_profile');
+                    profileRestored = true;
                     setLoading(false);
                     return;
                  }
@@ -153,16 +155,13 @@ export function AuthProvider({ children }) {
            }
         }
 
-        // Se falhar a recuperação, devolve os dados básicos em vez de anular o utilizador ("ghost state")
-        // O utilizador será levado pelo dashboard correspondente à sua função caso haja fallback, senão assumimos role default
-        setUser({ 
-           auth_id: userId, 
-           id: userId, 
-           email: userEmail, 
-           role: 'client', // Default fallback para impedir paragem completa
-           status: 'active'  // Clientes têm sempre acesso direto
-        })
-        fetchedUserIdRefs.current = null; 
+        if (!profileRestored) {
+          // O perfil não existe na BD e não há registo pendente no localStorage: o utilizador foi apagado!
+          console.warn("Perfil de utilizador não encontrado na BD e sem registo pendente local. A terminar sessão...");
+          await supabase.auth.signOut();
+          setUser(null);
+          fetchedUserIdRefs.current = null;
+        }
       }
     } catch (err) {
       console.error('Erro ao buscar perfil:', err)
