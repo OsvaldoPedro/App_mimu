@@ -112,7 +112,6 @@ serve(async (req) => {
       body: JSON.stringify({
         recipients: [formattedRecipient],
         content: smsMessage,
-        senderId: 'Mimu',
       }),
     })
 
