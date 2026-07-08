@@ -12,7 +12,8 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   // 2. Handle Pending / Rejected status
   // Allow admins to always pass (their status should be approved anyway)
-  if (user.role !== 'admin') {
+  // Clients always have direct access — only company/provider need approval
+  if (user.role !== 'admin' && user.role !== 'client' && user.role !== 'cliente') {
     if (user.status === 'pending_approval' && location.pathname !== '/perfil') {
       return (
         <div className="min-h-screen bg-mimu-cream dark:bg-[#121212] flex items-center justify-center px-4">

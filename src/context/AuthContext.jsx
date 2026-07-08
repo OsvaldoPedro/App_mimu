@@ -160,7 +160,7 @@ export function AuthProvider({ children }) {
            id: userId, 
            email: userEmail, 
            role: 'client', // Default fallback para impedir paragem completa
-           status: 'pending_approval'
+           status: 'active'  // Clientes têm sempre acesso direto
         })
         fetchedUserIdRefs.current = null; 
       }
