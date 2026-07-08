@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAllUsers, approveUser, rejectUser, deleteUser } from '../../hooks/useAdmin'
 import { sendBroadcastNotification, addNotification } from '../../hooks/useNotifications'
 
@@ -15,6 +16,7 @@ const formatDate = (dateString) => {
 }
 
 export default function AdminUsersPage() {
+  const { t } = useTranslation()
   const { users, reload, loading } = useAllUsers()
   const [processing, setProcessing] = useState(null)
   const [viewingUser, setViewingUser] = useState(null)
@@ -30,19 +32,19 @@ export default function AdminUsersPage() {
 
   const handleSendNotification = async () => {
     if (!broadcastTitle || !broadcastMessage) {
-      alert('Preencha título e mensagem.')
+      alert(t('admin.users.broadcastFillAll'))
       return
     }
     setSendingBroadcast(true)
     
     if (['all', 'client', 'company', 'provider'].includes(broadcastTarget)) {
       const { success } = await sendBroadcastNotification(broadcastTarget, broadcastTitle, broadcastMessage)
-      if (success) alert('Comunicado enviado com sucesso!')
-      else alert('Erro ao enviar comunicado.')
+      if (success) alert(t('admin.users.broadcastSuccess'))
+      else alert(t('admin.users.broadcastError'))
     } else {
       // É um utilizador específico (broadcastTarget === userId)
       await addNotification(broadcastTarget, broadcastTitle, broadcastMessage)
-      alert('Mensagem enviada com sucesso ao utilizador!')
+      alert(t('admin.users.broadcastSentUser'))
     }
     
     setSendingBroadcast(false)
@@ -88,7 +90,7 @@ export default function AdminUsersPage() {
   }
 
   const handleReject = async (id) => {
-    if (!window.confirm("Tens a certeza que queres rejeitar esta conta?")) return
+    if (!window.confirm(t('admin.users.rejectConfirm'))) return
     setProcessing(id)
     await rejectUser(id)
     await reload()
@@ -96,13 +98,13 @@ export default function AdminUsersPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Tens a certeza absoluta que queres APAGAR esta conta? Todos os dados (serviços, pedidos, etc.) serão eliminados de forma definitiva.")) return
+    if (!window.confirm(t('admin.users.deleteConfirm'))) return
     setProcessing(id)
     const result = await deleteUser(id)
     if (result.success) {
-      alert("Utilizador apagado com sucesso!")
+      alert(t('admin.users.deleteSuccess'))
     } else {
-      alert("Erro ao apagar utilizador: " + result.error)
+      alert(t('admin.users.deleteError') + ': ' + result.error)
     }
     await reload()
     setProcessing(null)
@@ -112,8 +114,8 @@ export default function AdminUsersPage() {
     <div className="w-full">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-wine-text dark:text-white mb-2">Gestão de Utilizadores</h1>
-            <p className="text-mimu-wine-light-text dark:text-gray-300 text-sm sm:text-base">Total: {users.length} utilizadores registados</p>
+            <h1 className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-wine-text dark:text-white mb-2">{t('admin.users.title')}</h1>
+            <p className="text-mimu-wine-light-text dark:text-gray-300 text-sm sm:text-base">Total: {users.length} {t('admin.users.totalUsers')}</p>
           </div>
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button
@@ -122,17 +124,17 @@ export default function AdminUsersPage() {
                 setShowBroadcastModal(true)
               }}
               className="px-4 py-2 bg-mimu-gold text-mimu-wine-text dark:text-white text-white font-medium rounded-lg hover:bg-mimu-gold text-mimu-wine-text dark:text-white transition-colors flex items-center gap-2"
-              title="Avisar Vários Utilizadores"
+              title={t('admin.users.broadcastTitle')}
             >
-              <span>📢</span> Comunicado
+              <span>📢</span> {t('admin.users.broadcast')}
             </button>
             <button
               onClick={() => reload()}
               disabled={loading}
               className="px-4 py-2 bg-mimu-gold text-mimu-wine-text dark:text-white font-medium rounded-lg hover:bg-[#b87d26] disabled:opacity-50 transition-colors"
-              title="Recarregar lista"
+              title={t('admin.users.reload')}
             >
-              {loading ? '⟳ A carregar...' : '⟳ Recarregar'}
+              {loading ? t('admin.users.loading') : t('admin.users.reload')}
             </button>
           </div>
         </div>
@@ -140,52 +142,52 @@ export default function AdminUsersPage() {
         {/* Filtros */}
         <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">Filtrar por Tipo</label>
+            <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('admin.users.filterByType')}</label>
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none bg-mimu-white dark:bg-[#1E1E1E]"
             >
-              <option value="">Todos os Tipos</option>
-              <option value="client">Clientes</option>
-              <option value="company">Empresas</option>
-              <option value="provider">Prestadores</option>
+              <option value="">{t('admin.users.allTypes')}</option>
+              <option value="client">{t('admin.users.clients')}</option>
+              <option value="company">{t('admin.users.companies')}</option>
+              <option value="provider">{t('admin.users.providers')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">Filtrar por Estado</label>
+            <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('admin.users.filterByStatus')}</label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none bg-mimu-white dark:bg-[#1E1E1E]"
             >
-              <option value="">Todos os Estados</option>
-              <option value="active">Ativo</option>
-              <option value="approved">Aprovado</option>
-              <option value="pending_approval">Pendente</option>
-              <option value="rejected">Rejeitado</option>
+              <option value="">{t('admin.users.allStatuses')}</option>
+              <option value="active">{t('admin.users.active')}</option>
+              <option value="approved">{t('admin.users.approved')}</option>
+              <option value="pending_approval">{t('admin.users.pending')}</option>
+              <option value="rejected">{t('admin.users.rejected')}</option>
             </select>
           </div>
         </div>
 
         {loading ? (
-           <p className="text-mimu-wine-text dark:text-white">A carregar...</p>
+           <p className="text-mimu-wine-text dark:text-white">{t('admin.users.loading')}</p>
         ) : filteredUsers.length === 0 ? (
            <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 md:p-8 rounded-2xl shadow text-center text-mimu-wine-light-text dark:text-gray-300/80">
-              {filterRole || filterStatus ? 'Nenhum utilizador encontrado com os filtros aplicados.' : 'Nenhum utilizador registado ainda.'}
+              filterRole || filterStatus ? t('admin.users.noUsersFiltered') : t('admin.users.noUsers')
            </div>
         ) : (
           <div className="overflow-x-auto -mx-4 sm:mx-0 sm:overflow-visible">
             <table className="w-full text-left bg-mimu-white dark:bg-[#1E1E1E] rounded-lg shadow-md text-sm sm:text-base min-w-max sm:min-w-0">
               <thead>
                 <tr className="border-b border-mimu-border-light">
-                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">Nome / Empresa</th>
-                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">E-mail</th>
-                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">Telemóvel</th>
-                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">Função</th>
-                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">Estado</th>
-                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">Data de Criação</th>
-                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white text-right">Ação</th>
+                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">{t('admin.users.nameCompany')}</th>
+                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">{t('admin.users.email')}</th>
+                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">{t('admin.users.phone')}</th>
+                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">{t('admin.users.role')}</th>
+                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">{t('admin.users.statusCol')}</th>
+                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white">{t('admin.users.createdAt')}</th>
+                  <th className="px-4 py-3 font-semibold text-mimu-wine-text dark:text-white text-right">{t('admin.users.action')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -196,7 +198,7 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 text-mimu-wine-light-text dark:text-gray-300">{u.phone || '-'}</td>
                     <td className="px-4 py-3 text-mimu-wine-light-text dark:text-gray-300 capitalize">
                       <span className="px-2 py-1 rounded bg-amber-100 text-amber-800 text-xs font-bold inline-block">
-                        {u.role === 'client' ? 'Cliente' : u.role === 'company' ? 'Empresa' : u.role === 'provider' ? 'Prestador' : u.role}
+                        {u.role === 'client' ? t('admin.users.client') : u.role === 'company' ? t('admin.users.company') : u.role === 'provider' ? t('admin.users.provider') : u.role}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-mimu-wine-light-text dark:text-gray-300">
@@ -207,7 +209,7 @@ export default function AdminUsersPage() {
                         u.status === 'rejected' ? 'bg-red-100 text-red-800' :
                         'bg-mimu-gray-100 dark:bg-[#121212] text-mimu-text-dark dark:text-white'
                       }`}>
-                        {u.status === 'active' ? 'Ativo' : u.status === 'approved' ? 'Aprovado' : u.status === 'pending_approval' ? 'Pendente' : u.status === 'rejected' ? 'Rejeitado' : u.status}
+                        {u.status === 'active' ? t('admin.users.active') : u.status === 'approved' ? t('admin.users.approved') : u.status === 'pending_approval' ? t('admin.users.pending') : u.status === 'rejected' ? t('admin.users.rejected') : u.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-mimu-wine-light-text dark:text-gray-300 text-sm">{formatDate(u.created_at)}</td>
@@ -264,7 +266,7 @@ export default function AdminUsersPage() {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
               
-              <h2 className="text-xl md:text-2xl font-bold mb-6 text-mimu-wine-text dark:text-white border-b pb-2">Perfil Completo</h2>
+              <h2 className="text-xl md:text-2xl font-bold mb-6 text-mimu-wine-text dark:text-white border-b pb-2">{t('admin.users.userDetails')}</h2>
               
               <div className="flex flex-col md:flex-row gap-6 mb-6">
                 {(viewingUser.avatar_url || viewingUser.logo_url) ? (
@@ -283,24 +285,24 @@ export default function AdminUsersPage() {
                    <h3 className="text-xl font-bold text-mimu-text-dark dark:text-white">{viewingUser.company_name || viewingUser.name}</h3>
                    <div className="mt-2 space-y-1 text-sm text-mimu-text-muted">
                       <p><strong className="text-mimu-wine-text dark:text-white">ID:</strong> {viewingUser.id}</p>
-                      <p><strong className="text-mimu-wine-text dark:text-white">Email:</strong> {viewingUser.email}</p>
-                      <p><strong className="text-mimu-wine-text dark:text-white">Telefone:</strong> {viewingUser.phone || 'N/A'}</p>
-                      <p><strong className="text-mimu-wine-text dark:text-white">Função:</strong> <span className="uppercase text-amber-700 font-bold">{viewingUser.role}</span></p>
-                      <p><strong className="text-mimu-wine-text dark:text-white">Localização:</strong> {viewingUser.province || 'N/A'}, {viewingUser.city || 'N/A'}</p>
+                      <p><strong className="text-mimu-wine-text dark:text-white">{t('admin.users.email')}:</strong> {viewingUser.email}</p>
+                      <p><strong className="text-mimu-wine-text dark:text-white">{t('admin.users.phone')}:</strong> {viewingUser.phone || 'N/A'}</p>
+                      <p><strong className="text-mimu-wine-text dark:text-white">{t('admin.users.role')}:</strong> <span className="uppercase text-amber-700 font-bold">{viewingUser.role}</span></p>
+                      <p><strong className="text-mimu-wine-text dark:text-white">{t('listing.location')}:</strong> {viewingUser.province || 'N/A'}, {viewingUser.city || 'N/A'}</p>
                    </div>
                 </div>
               </div>
 
               {viewingUser.description && (
                 <div className="mb-6">
-                  <h4 className="font-bold text-mimu-wine-text dark:text-white mb-2 border-b pb-1">Descrição</h4>
+                  <h4 className="font-bold text-mimu-wine-text dark:text-white mb-2 border-b pb-1">{t('more.description')}</h4>
                   <p className="text-sm text-mimu-text-muted whitespace-pre-wrap">{viewingUser.description}</p>
                 </div>
               )}
 
               {viewingUser.gallery_urls && viewingUser.gallery_urls.length > 0 && (
                 <div className="mb-6">
-                  <h4 className="font-bold text-mimu-wine-text dark:text-white mb-2 border-b pb-1">Galeria (Carrossel)</h4>
+                  <h4 className="font-bold text-mimu-wine-text dark:text-white mb-2 border-b pb-1">{t('listing.gallery')}</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-4 gap-2">
                     {viewingUser.gallery_urls.map((url, i) => (
                        <img 
@@ -309,7 +311,7 @@ export default function AdminUsersPage() {
                          alt={`Gallery ${i}`} 
                          className="w-full aspect-square object-cover rounded shadow-sm border hover:scale-[1.02] cursor-pointer transition-transform" 
                          onClick={() => window.open(url, '_blank')}
-                         title="Clique para ver no tamanho original"
+                         title={t('admin.users.viewOriginal')}
                        />
                     ))}
                   </div>
@@ -320,15 +322,15 @@ export default function AdminUsersPage() {
                   <button 
                     disabled={processing === viewingUser.id}
                     onClick={async () => {
-                      if (window.confirm("Tens a certeza absoluta que queres APAGAR esta conta definitivamente?")) {
+                      if (window.confirm(t('admin.users.deleteConfirm'))) {
                         setProcessing(viewingUser.id)
                         const result = await deleteUser(viewingUser.id)
                         if (result.success) {
-                          alert("Utilizador apagado com sucesso!")
+                          alert(t('admin.users.deleteSuccess'))
                           setViewingUser(null)
                           reload()
                         } else {
-                          alert("Erro: " + result.error)
+                          alert(t('admin.users.deleteError') + ': ' + result.error)
                         }
                         setProcessing(null)
                       }
@@ -362,24 +364,24 @@ export default function AdminUsersPage() {
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
             <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl shadow-xl w-full max-w-md p-6">
               <h2 className="text-xl font-bold mb-4 text-mimu-wine-text dark:text-white">
-                {['all', 'client', 'company', 'provider'].includes(broadcastTarget) ? 'Enviar Comunicado Global' : 'Enviar Mensagem Individual'}
+                ['all', 'client', 'company', 'provider'].includes(broadcastTarget) ? t('admin.users.broadcastTitle') : t('admin.users.notifyBtn')
               </h2>
               
               {['all', 'client', 'company', 'provider'].includes(broadcastTarget) && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-mimu-text-muted mb-1">Público Alvo</label>
+                  <label className="block text-sm font-medium text-mimu-text-muted mb-1">{t('admin.users.broadcastTo')}</label>
                   <select 
                     value={broadcastTarget} 
                     onChange={(e) => setBroadcastTarget(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-mimu-gold"
                   >
-                    <option value="all">Todos os Utilizadores</option>
-                    <option value="client">Apenas Clientes</option>
-                    <option value="company">Apenas Empresas</option>
-                    <option value="provider">Apenas Prestadores</option>
+                    <option value="all">{t('admin.users.broadcastAllUsers')}</option>
+                    <option value="client">{t('admin.users.clients')}</option>
+                    <option value="company">{t('admin.users.companies')}</option>
+                    <option value="provider">{t('admin.users.providers')}</option>
                   </select>
                   <div className="mt-3">
-                    <p className="text-sm text-mimu-wine-text dark:text-white font-bold mb-1">Público abrangerá: {targetUsers.length} utilizador(es)</p>
+                    <p className="text-sm text-mimu-wine-text dark:text-white font-bold mb-1">{t('admin.users.broadcastTargetCount')}: {targetUsers.length}</p>
                     <div className="max-h-32 overflow-y-auto border rounded bg-mimu-gray-50 dark:bg-[#121212] p-2 text-xs space-y-1">
                       {targetUsers.map(u => (
                         <div key={u.id} className="truncate border-b border-mimu-border-light pb-1 last:border-0 last:pb-0 text-mimu-text-muted">
@@ -392,24 +394,24 @@ export default function AdminUsersPage() {
               )}
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-mimu-text-muted mb-1">Título/Assunto</label>
+                <label className="block text-sm font-medium text-mimu-text-muted mb-1">{t('admin.users.broadcastTitleField')}</label>
                 <input 
                   type="text" 
                   value={broadcastTitle}
                   onChange={(e) => setBroadcastTitle(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-mimu-gold"
-                  placeholder="Ex: Atualização Terms & Cond."
+                  placeholder={t('admin.users.broadcastTitleField')}
                 />
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-mimu-text-muted mb-1">Mensagem</label>
+                <label className="block text-sm font-medium text-mimu-text-muted mb-1">{t('admin.users.broadcastMessage')}</label>
                 <textarea 
                   value={broadcastMessage}
                   onChange={(e) => setBroadcastMessage(e.target.value)}
                   rows="4"
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-mimu-gold"
-                  placeholder="Escreve aqui o conteúdo da notificação..."
+                  placeholder={t('admin.users.broadcastMessagePlaceholder') || ''}
                 ></textarea>
               </div>
 
@@ -426,7 +428,7 @@ export default function AdminUsersPage() {
                   disabled={sendingBroadcast}
                   className="px-6 py-2 bg-mimu-gold text-mimu-wine-text dark:text-white text-white rounded-lg hover:bg-mimu-gold text-mimu-wine-text dark:text-white font-medium disabled:opacity-50"
                 >
-                  {sendingBroadcast ? 'A Enviar...' : 'Enviar'}
+                  {sendingBroadcast ? t('admin.users.broadcastSending') : t('admin.users.broadcastSend')}
                 </button>
               </div>
             </div>

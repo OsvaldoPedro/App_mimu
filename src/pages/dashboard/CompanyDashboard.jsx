@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useServices } from '../../context/ServicesContext'
@@ -15,8 +16,8 @@ import { updateOrderStatus } from '../../hooks/useOrders'
 import { useWallet } from '../../hooks/useWallet'
 import { useCompanyPartners } from '../../hooks/useCompanyPartners'
 
-const statusLabels = { pendente: 'Pendente', aceite: 'Aceite', em_curso: 'Em curso', concluido: 'Concluído', cancelado: 'Cancelado' }
-const paymentLabels = { pendente: 'Pendente', aguardando: 'Aguardando Confirmação', confirmado: 'Confirmado', pago_50: 'Pago 50%', pago: 'Pago' }
+// statusLabels defined inside component using t()
+// paymentLabels defined inside component using t()
 
 const LocalSpinner = () => (
   <div className="flex flex-col items-center justify-center py-10 animate-fade-in">
@@ -157,11 +158,11 @@ export default function CompanyDashboard() {
       if (res) {
         toast.success(`Pedido ${statusLabels[status] || status} com sucesso!`)
       } else {
-        toast.error('Erro ao atualizar o estado do pedido.')
+        toast.error(t('dashboard.orderUpdateError'))
       }
     } catch (err) {
       console.error(err)
-      toast.error('Ocorreu um erro ao atualizar o estado.')
+      toast.error(t('dashboard.orderUpdateError'))
     }
     reload()
   }
@@ -199,7 +200,7 @@ export default function CompanyDashboard() {
   const handlePartnerSubmit = async (e) => {
     e.preventDefault()
     if (!partnerForm.name.trim() || !partnerForm.phone.trim() || !partnerForm.categoryId) {
-      setPartnerError('Nome, telefone e categoria são obrigatórios.')
+      setPartnerError(t('dashboard.company.partnerRequired'))
       return
     }
     const payload = {
@@ -216,10 +217,10 @@ export default function CompanyDashboard() {
       result = await createPartner(payload)
     }
     if (result.success) {
-      toast.success(partnerForm.id ? 'Parceiro atualizado!' : 'Parceiro adicionado!')
+      toast.success(partnerForm.id ? t('dashboard.company.partnerUpdated') : t('dashboard.company.partnerAdded'))
       resetPartnerForm()
     } else {
-      setPartnerError(result.error || 'Erro ao guardar parceiro.')
+      setPartnerError(result.error || t('dashboard.company.partnerError'))
     }
   }
 
@@ -237,7 +238,7 @@ export default function CompanyDashboard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h2 className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white mb-4">Conta Pendente de Aprovação</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white mb-4">{t('dashboard.company.pendingTitle')}</h2>
           <p className="text-mimu-wine-light-text dark:text-gray-300 mb-8">
             Os seus dados de empresa foram recebidos e estão a ser avaliados pela nossa equipa administrativa. Assim que a sua conta for aprovada, terá acesso completo a este painel.
           </p>
@@ -264,7 +265,7 @@ export default function CompanyDashboard() {
               <button 
                 onClick={() => setSearchParams({ tab: 'perfil' })}
                 className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-mimu-gold text-mimu-wine-text dark:text-white flex items-center justify-center shadow-md hover:bg-[#b87d26] transition active:scale-90 border-2 border-mimu-cream dark:border-[#121212]"
-                title="Editar Perfil"
+                title={t('dashboard.editProfile')}
               >
                 <svg className="w-3 h-3 text-mimu-wine-text dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
@@ -282,14 +283,14 @@ export default function CompanyDashboard() {
               <button 
                 onClick={() => setSearchParams({ tab: 'perfil' })}
                 className="w-7 h-7 rounded-full bg-mimu-gold/10 hover:bg-mimu-gold/20 text-mimu-gold flex items-center justify-center transition active:scale-90"
-                title="Editar Perfil"
+                title={t('dashboard.editProfile')}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
                 </svg>
               </button>
             </div>
-            <p className="text-mimu-wine-light-text dark:text-gray-300/80">Painel da Empresa</p>
+            <p className="text-mimu-wine-light-text dark:text-gray-300/80">{t('dashboard.company.title')}</p>
           </div>
         </div>
         <div className="flex gap-4">

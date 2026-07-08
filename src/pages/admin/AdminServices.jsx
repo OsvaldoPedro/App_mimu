@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAdminServices, updateServiceStatus } from '../../hooks/useAdmin'
 
 export default function AdminServices() {
+  const { t } = useTranslation()
   const { services, reload, loading } = useAdminServices()
   const [selectedService, setSelectedService] = useState(null)
   const [showImages, setShowImages] = useState(false)
@@ -26,13 +28,13 @@ export default function AdminServices() {
 
   return (
     <div className="w-full">
-        <h1 className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-wine-text dark:text-white mb-6 md:mb-8">Serviços Pendentes e Aprovados</h1>
+        <h1 className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-wine-text dark:text-white mb-6 md:mb-8">{t('admin.services.title')}</h1>
 
         <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300">
           {loading ? (
-             <p className="text-mimu-wine-light-text dark:text-gray-300">A carregar serviços...</p>
+             <p className="text-mimu-wine-light-text dark:text-gray-300">{t('admin.services.loading')}</p>
           ) : services.length === 0 ? (
-             <p className="text-mimu-wine-light-text dark:text-gray-300">Não existem serviços registados.</p>
+             <p className="text-mimu-wine-light-text dark:text-gray-300">{t('admin.services.noServices')}</p>
           ) : (
              <div className="space-y-4">
                {services.map((service) => (
@@ -44,8 +46,8 @@ export default function AdminServices() {
                        <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">{service.location}</p>
                      </div>
                      <div>
-                       <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80 font-medium">Fornecedor: {service.provider_name}</p>
-                       <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">Contacto: {service.provider_phone}</p>
+                       <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80 font-medium">{t('admin.services.provider')}: {service.provider_name}</p>
+                       <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">{t('admin.services.contact')}: {service.provider_phone}</p>
                      </div>
                      <div>
                        <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80 line-clamp-3">{service.description}</p>
@@ -58,9 +60,9 @@ export default function AdminServices() {
                          service.status === 'rejected' ? 'bg-red-100 text-red-800' :
                          'bg-mimu-gray-100 dark:bg-[#121212] text-mimu-text-dark dark:text-white'
                        }`}>
-                       {service.status === 'approved' ? 'Aprovado (Público)' :
-                        (service.status === 'pending_validation' || service.status === 'pending') ? 'Pendente' :
-                        service.status === 'rejected' ? 'Rejeitado' : service.status}
+                       {service.status === 'approved' ? t('admin.services.approvedPublic') :
+                        (service.status === 'pending_validation' || service.status === 'pending') ? t('status.pending') :
+                        service.status === 'rejected' ? t('status.rejected') : service.status}
                      </span>
                      <div className="space-x-2">
                        {(service.status === 'pending_validation' || service.status === 'pending') && (

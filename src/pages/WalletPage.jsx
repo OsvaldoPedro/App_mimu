@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
@@ -34,19 +35,19 @@ const icons = {
 
 // ─── Type labels ──────────────────────────────────────────────────────────────
 const typeConfig = {
-  deposit: { label: 'Depósito', color: '#10B981', bg: '#064E3B', sign: '+', icon: icons.deposit },
-  withdrawal: { label: 'Levantamento', color: '#F59E0B', bg: '#451A03', sign: '-', icon: icons.withdraw },
-  payment: { label: 'Pagamento', color: '#EF4444', bg: '#450A0A', sign: '-', icon: icons.withdraw },
-  transfer_in: { label: 'Transferência Recebida', color: '#10B981', bg: '#064E3B', sign: '+', icon: icons.transfer },
-  transfer_out: { label: 'Transferência Enviada', color: '#8B5CF6', bg: '#2E1065', sign: '-', icon: icons.transfer },
-  refund: { label: 'Reembolso', color: '#06B6D4', bg: '#0C4A6E', sign: '+', icon: icons.deposit },
+  deposit: { label: t('wallet.typeDeposit'), color: '#10B981', bg: '#064E3B', sign: '+', icon: icons.deposit },
+  withdrawal: { label: t('wallet.typeWithdrawal'), color: '#F59E0B', bg: '#451A03', sign: '-', icon: icons.withdraw },
+  payment: { label: t('wallet.typePayment'), color: '#EF4444', bg: '#450A0A', sign: '-', icon: icons.withdraw },
+  transfer_in: { label: t('wallet.typeTransferIn'), color: '#10B981', bg: '#064E3B', sign: '+', icon: icons.transfer },
+  transfer_out: { label: t('wallet.typeTransferOut'), color: '#8B5CF6', bg: '#2E1065', sign: '-', icon: icons.transfer },
+  refund: { label: t('wallet.typeRefund'), color: '#06B6D4', bg: '#0C4A6E', sign: '+', icon: icons.deposit },
 }
 
 const statusConfig = {
-  completed: { label: 'Concluída', color: '#10B981' },
-  pending: { label: 'Pendente', color: '#F59E0B' },
-  failed: { label: 'Falhada', color: '#EF4444' },
-  cancelled: { label: 'Cancelada', color: '#6B7280' },
+  completed: { label: t('wallet.statusCompleted'), color: '#10B981' },
+  pending: { label: t('wallet.statusPending'), color: '#F59E0B' },
+  failed: { label: t('wallet.statusFailed'), color: '#EF4444' },
+  cancelled: { label: t('wallet.statusCancelled'), color: '#6B7280' },
 }
 
 // ─── Modal genérico ───────────────────────────────────────────────────────────
@@ -97,6 +98,7 @@ const btnPrimary = {
 
 // ─── Deposit Modal ────────────────────────────────────────────────────────────
 function DepositModal({ onClose, onSuccess }) {
+  const { t } = useTranslation()
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState('reference')
   const [loading, setLoading] = useState(false)
@@ -104,7 +106,7 @@ function DepositModal({ onClose, onSuccess }) {
 
   const handleSubmit = async () => {
     const val = parseFloat(amount)
-    if (!val || val < 100) return toast.error('Montante mínimo: 100 AOA')
+    if (!val || val < 100) return toast.error(t('wallet.minAmount'))
     setLoading(true)
     const res = await depositToWallet(val, method)
     setLoading(false)
@@ -114,25 +116,25 @@ function DepositModal({ onClose, onSuccess }) {
 
   if (result) {
     return (
-      <Modal title="Pagamento Iniciado" onClose={() => { onClose(); onSuccess?.() }}>
+      <Modal title={t('wallet.paymentStarted')} onClose={() => { onClose(); onSuccess?.() }}>
         <div className="text-center py-4">
           <div className="text-5xl mb-4">💳</div>
           <p className="text-white font-bold text-xl mb-1">{parseFloat(result.amount).toFixed(2)} AOA</p>
           <p className="text-white/60 text-sm mb-6">
-            {method === 'multicaixa_express' ? 'Siga as instruções no seu telemóvel para confirmar o pagamento.' : 'Use a referência abaixo para efetuar o pagamento.'}
+            method === 'multicaixa_express' ? t('wallet.multicaixaInstructions') : t('wallet.referenceInstructions')
           </p>
 
           {result.reference && (
             <div style={{ background: 'rgba(212,175,55,0.1)', borderRadius: '12px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(212,175,55,0.3)' }}>
-              <p className="text-white/60 text-xs mb-1">Referência</p>
+              <p className="text-white/60 text-xs mb-1">{t('wallet.reference')}</p>
               <p className="text-yellow-400 font-mono font-bold text-lg">{result.reference}</p>
             </div>
           )}
 
-          <p className="text-white/50 text-xs">O saldo será creditado automaticamente após a confirmação.</p>
+          <p className="text-white/50 text-xs">{t('wallet.creditedAuto')}</p>
 
           <button onClick={() => { onClose(); onSuccess?.() }} style={{ ...btnPrimary, marginTop: '20px' }}>
-            Fechar
+            {t('wallet.close')}
           </button>
         </div>
       </Modal>
@@ -140,13 +142,13 @@ function DepositModal({ onClose, onSuccess }) {
   }
 
   return (
-    <Modal title="💰 Depositar Saldo" onClose={onClose}>
-      <p className="text-white/60 text-sm mb-4">Escolha o método e o montante para depositar na sua carteira.</p>
+    <Modal title={t('wallet.depositTitle')} onClose={onClose}>
+      <p className="text-white/60 text-sm mb-4">{t('wallet.depositDesc')}</p>
 
-      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">Método de Pagamento</label>
+      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">{t('wallet.paymentMethod')}</label>
       <div className="grid grid-cols-2 gap-3 mb-4">
         {[
-          { id: 'reference', label: 'Referência', emoji: '🏦' },
+          { id: 'reference', label: t('wallet.reference'), emoji: '🏦' },
           { id: 'multicaixa_express', label: 'Multicaixa Express', emoji: '📱' }
         ].map(m => (
           <button key={m.id} onClick={() => setMethod(m.id)}
@@ -157,7 +159,7 @@ function DepositModal({ onClose, onSuccess }) {
         ))}
       </div>
 
-      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">Montante (AOA)</label>
+      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">{t('wallet.amount')}</label>
       <input style={inputStyle} type="number" placeholder="Ex: 5000" value={amount} onChange={e => setAmount(e.target.value)} min="100" />
 
       <div className="flex flex-wrap gap-2 mb-4">
@@ -170,7 +172,7 @@ function DepositModal({ onClose, onSuccess }) {
       </div>
 
       <button onClick={handleSubmit} disabled={loading} style={btnPrimary}>
-        {loading ? 'A processar...' : 'Continuar para Pagamento'}
+        {loading ? t('wallet.processing') : t('wallet.continuePayment')}
       </button>
     </Modal>
   )
@@ -178,6 +180,7 @@ function DepositModal({ onClose, onSuccess }) {
 
 // ─── Withdraw Modal ───────────────────────────────────────────────────────────
 function WithdrawModal({ balance, onClose, onSuccess }) {
+  const { t } = useTranslation()
   const [amount, setAmount] = useState('')
   const [phone, setPhone] = useState('')
   const [iban, setIban] = useState('')
@@ -186,10 +189,10 @@ function WithdrawModal({ balance, onClose, onSuccess }) {
 
   const handleSubmit = async () => {
     const val = parseFloat(amount)
-    if (!val || val < 500) return toast.error('Montante mínimo: 500 AOA')
-    if (val > balance) return toast.error('Saldo insuficiente.')
-    if (method === 'phone' && !phone) return toast.error('Insira o número de telemóvel.')
-    if (method === 'iban' && !iban) return toast.error('Insira o IBAN.')
+    if (!val || val < 500) return toast.error(t('wallet.minWithdraw'))
+    if (val > balance) return toast.error(t('wallet.insufficientBalance'))
+    if (method === 'phone' && !phone) return toast.error(t('wallet.phone'))
+    if (method === 'iban' && !iban) return toast.error(t('wallet.iban'))
 
     setLoading(true)
     const res = await withdrawFromWallet(val, {
@@ -198,18 +201,18 @@ function WithdrawModal({ balance, onClose, onSuccess }) {
     })
     setLoading(false)
     if (!res.success) return toast.error(res.error)
-    toast.success('Levantamento solicitado com sucesso!')
+    toast.success(t('wallet.withdrawBtn'))
     onSuccess?.()
     onClose()
   }
 
   return (
-    <Modal title="🏧 Levantar Saldo" onClose={onClose}>
-      <p className="text-white/60 text-sm mb-4">Saldo disponível: <span className="text-yellow-400 font-bold">{parseFloat(balance).toFixed(2)} AOA</span></p>
+    <Modal title={t('wallet.withdrawTitle')} onClose={onClose}>
+      <p className="text-white/60 text-sm mb-4">{t('wallet.availableBalance')}: <span className="text-yellow-400 font-bold">{parseFloat(balance).toFixed(2)} AOA</span></p>
 
-      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">Método de Recebimento</label>
+      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">{t('wallet.paymentMethod')}</label>
       <div className="grid grid-cols-2 gap-3 mb-4">
-        {[{ id: 'phone', label: 'Multicaixa', emoji: '📱' }, { id: 'iban', label: 'Transferência', emoji: '🏦' }].map(m => (
+        {[{ id: 'phone', label: t('wallet.typeMulticaixa'), emoji: '📱' }, { id: 'iban', label: t('wallet.typeTransfer'), emoji: '🏦' }].map(m => (
           <button key={m.id} onClick={() => setMethod(m.id)}
             style={{ padding: '14px 8px', borderRadius: '12px', border: `2px solid ${method === m.id ? '#D4AF37' : 'rgba(255,255,255,0.1)'}`, background: method === m.id ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.04)', cursor: 'pointer' }}>
             <div className="text-2xl mb-1">{m.emoji}</div>
@@ -218,27 +221,27 @@ function WithdrawModal({ balance, onClose, onSuccess }) {
         ))}
       </div>
 
-      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">Montante (AOA)</label>
-      <input style={inputStyle} type="number" placeholder="Mínimo: 500 AOA" value={amount} onChange={e => setAmount(e.target.value)} />
+      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">{t('wallet.amount')}</label>
+      <input style={inputStyle} type="number" placeholder={t('wallet.minWithdraw')} value={amount} onChange={e => setAmount(e.target.value)} />
 
       {method === 'phone' ? (
         <>
-          <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">Número de Telemóvel</label>
+          <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">{t('wallet.phone')}</label>
           <input style={inputStyle} type="tel" placeholder="9XX XXX XXX" value={phone} onChange={e => setPhone(e.target.value)} />
         </>
       ) : (
         <>
-          <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">IBAN / Conta Bancária</label>
+          <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">{t('wallet.iban')}</label>
           <input style={inputStyle} type="text" placeholder="AO06.0040.0000.0000.0000.0000" value={iban} onChange={e => setIban(e.target.value)} />
         </>
       )}
 
       <div style={{ background: 'rgba(245,158,11,0.1)', borderRadius: '10px', padding: '10px 14px', marginBottom: '12px', border: '1px solid rgba(245,158,11,0.2)' }}>
-        <p className="text-yellow-400 text-xs">⏱ Processado em 1-2 dias úteis. Taxa: gratuito.</p>
+        <p className="text-yellow-400 text-xs">{t('wallet.processTime')}</p>
       </div>
 
       <button onClick={handleSubmit} disabled={loading} style={btnPrimary}>
-        {loading ? 'A processar...' : 'Solicitar Levantamento'}
+        {loading ? t('wallet.processing') : t('wallet.withdrawBtn')}
       </button>
     </Modal>
   )
@@ -246,6 +249,7 @@ function WithdrawModal({ balance, onClose, onSuccess }) {
 
 // ─── Transfer Modal ───────────────────────────────────────────────────────────
 function TransferModal({ balance, onClose, onSuccess }) {
+  const { t } = useTranslation()
   const [amount, setAmount] = useState('')
   const [email, setEmail] = useState('')
   const [note, setNote] = useState('')
@@ -253,34 +257,34 @@ function TransferModal({ balance, onClose, onSuccess }) {
 
   const handleSubmit = async () => {
     const val = parseFloat(amount)
-    if (!val || val < 100) return toast.error('Montante mínimo: 100 AOA')
-    if (val > balance) return toast.error('Saldo insuficiente.')
-    if (!email || !email.includes('@')) return toast.error('Email inválido.')
+    if (!val || val < 100) return toast.error(t('wallet.minAmount'))
+    if (val > balance) return toast.error(t('wallet.insufficientBalance'))
+    if (!email || !email.includes('@')) return toast.error(t('register.invalidEmailPhone'))
 
     setLoading(true)
     const res = await transferFromWallet(val, email, note)
     setLoading(false)
     if (!res.success) return toast.error(res.error)
-    toast.success(`Transferência de ${val.toFixed(2)} AOA enviada!`)
+    toast.success(t('wallet.typeTransferOut') + ': ' + val.toFixed(2) + ' AOA')
     onSuccess?.()
     onClose()
   }
 
   return (
-    <Modal title="💸 Transferir para Utilizador" onClose={onClose}>
-      <p className="text-white/60 text-sm mb-4">Saldo disponível: <span className="text-yellow-400 font-bold">{parseFloat(balance).toFixed(2)} AOA</span></p>
+    <Modal title={t('wallet.transferTitle')} onClose={onClose}>
+      <p className="text-white/60 text-sm mb-4">{t('wallet.availableBalance')}: <span className="text-yellow-400 font-bold">{parseFloat(balance).toFixed(2)} AOA</span></p>
 
-      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">Email do Destinatário</label>
+      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">{t('wallet.recipient')}</label>
       <input style={inputStyle} type="email" placeholder="email@exemplo.com" value={email} onChange={e => setEmail(e.target.value)} />
 
-      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">Montante (AOA)</label>
+      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">{t('wallet.amount')}</label>
       <input style={inputStyle} type="number" placeholder="Mínimo: 100 AOA" value={amount} onChange={e => setAmount(e.target.value)} />
 
-      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">Nota (opcional)</label>
+      <label className="text-white/70 text-xs font-semibold block mb-2 uppercase tracking-wide">{t('wallet.note') || 'Nota (opcional)'}</label>
       <input style={inputStyle} type="text" placeholder="Ex: Pagamento de jantar" value={note} onChange={e => setNote(e.target.value)} />
 
       <button onClick={handleSubmit} disabled={loading} style={btnPrimary}>
-        {loading ? 'A enviar...' : 'Enviar Transferência'}
+        {loading ? t('wallet.processing') : t('wallet.transferBtn')}
       </button>
     </Modal>
   )
@@ -288,6 +292,7 @@ function TransferModal({ balance, onClose, onSuccess }) {
 
 // ─── Transaction Row ──────────────────────────────────────────────────────────
 function TxRow({ tx }) {
+  const { t } = useTranslation()
   const cfg = typeConfig[tx.type] || { label: tx.type, color: '#9CA3AF', bg: '#1f1f1f', sign: '', icon: icons.history }
   const st = statusConfig[tx.status] || { label: tx.status, color: '#9CA3AF' }
   const date = new Date(tx.created_at).toLocaleDateString('pt-AO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -316,6 +321,7 @@ function TxRow({ tx }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function WalletPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -375,12 +381,12 @@ export default function WalletPage() {
   const balance = wallet?.balance != null ? parseFloat(wallet.balance) : null
 
   const filterOptions = [
-    { key: null, label: 'Todos' },
-    { key: 'deposit', label: 'Depósitos' },
-    { key: 'withdrawal', label: 'Levantamentos' },
-    { key: 'payment', label: 'Pagamentos' },
-    { key: 'transfer_in', label: 'Recebidos' },
-    { key: 'transfer_out', label: 'Enviados' },
+    { key: null, label: t('admin.filter') + ' ' + t('admin.all') },
+    { key: 'deposit', label: t('wallet.typeDeposit') + 's' },
+    { key: 'withdrawal', label: t('wallet.typeWithdrawal') + 's' },
+    { key: 'payment', label: t('wallet.typePayment') + 's' },
+    { key: 'transfer_in', label: t('wallet.typeTransferIn') + 's' },
+    { key: 'transfer_out', label: t('wallet.typeTransferOut') + 's' },
   ]
 
   return (
@@ -391,7 +397,7 @@ export default function WalletPage() {
           style={{ width: '40px', height: '40px', borderRadius: '12px', border: 'none', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <Icon path={icons.back} size={18} color="white" />
         </button>
-        <h1 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>Carteira Mimu</h1>
+        <h1 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>{t('wallet.title')}</h1>
       </div>
 
       {/* Balance Card */}
@@ -403,7 +409,7 @@ export default function WalletPage() {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', position: 'relative' }}>
             <div>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: '500', margin: '0 0 6px' }}>Saldo Disponível</p>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: '500', margin: '0 0 6px' }}>{t('wallet.availableBalance')}</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <p style={{ color: 'white', fontSize: '36px', fontWeight: '800', margin: 0, letterSpacing: '-1px' }}>
                   {balance === null ? '—' : hideBalance ? '••••• AOA' : `${balance.toFixed(2)} AOA`}
@@ -426,9 +432,9 @@ export default function WalletPage() {
       {/* Action Buttons */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', margin: '16px 20px 0' }}>
         {[
-          { id: 'deposit', label: 'Depositar', emoji: '⬇️', color: '#10B981' },
-          { id: 'withdraw', label: 'Levantar', emoji: '⬆️', color: '#F59E0B' },
-          { id: 'transfer', label: 'Transferir', emoji: '↔️', color: '#8B5CF6' },
+          { id: 'deposit', label: t('wallet.deposit'), emoji: '⬇️', color: '#10B981' },
+          { id: 'withdraw', label: t('wallet.withdraw'), emoji: '⬆️', color: '#F59E0B' },
+          { id: 'transfer', label: t('wallet.transfer'), emoji: '↔️', color: '#8B5CF6' },
         ].map(btn => (
           <button key={btn.id} onClick={() => setModal(btn.id)}
             style={{ padding: '16px 8px', borderRadius: '16px', border: `1px solid rgba(255,255,255,0.08)`, background: 'rgba(255,255,255,0.04)', cursor: 'pointer', transition: 'all 0.2s' }}
@@ -443,8 +449,8 @@ export default function WalletPage() {
       {/* History Section */}
       <div style={{ margin: '24px 20px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <h2 style={{ color: 'white', fontSize: '17px', fontWeight: '700', margin: 0 }}>Histórico</h2>
-          <button onClick={handleRefresh} style={{ color: '#D4AF37', fontSize: '13px', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600' }}>↻ Atualizar</button>
+          <h2 style={{ color: 'white', fontSize: '17px', fontWeight: '700', margin: 0 }}>{t('wallet.history')}</h2>
+          <button onClick={handleRefresh} style={{ color: '#D4AF37', fontSize: '13px', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600' }}>{t('wallet.refresh')}</button>
         </div>
 
         {/* Filter chips */}
@@ -462,13 +468,13 @@ export default function WalletPage() {
           {loading ? (
             <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.4)' }}>
               <div style={{ fontSize: '28px', marginBottom: '8px' }}>⏳</div>
-              <p style={{ fontSize: '14px', margin: 0 }}>A carregar...</p>
+              <p style={{ fontSize: '14px', margin: 0 }}>{t('admin.users.loading')}</p>
             </div>
           ) : transactions.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.4)' }}>
               <div style={{ fontSize: '36px', marginBottom: '10px' }}>📭</div>
-              <p style={{ fontSize: '14px', margin: 0, fontWeight: '500' }}>Sem transações</p>
-              <p style={{ fontSize: '12px', margin: '4px 0 0', opacity: 0.6 }}>As suas movimentações aparecerão aqui.</p>
+              <p style={{ fontSize: '14px', margin: 0, fontWeight: '500' }}>{t('wallet.noTransactions')}</p>
+              <p style={{ fontSize: '12px', margin: '4px 0 0', opacity: 0.6 }}>{t('wallet.noTransactionsDesc')}</p>
             </div>
           ) : (
             <>
@@ -477,7 +483,7 @@ export default function WalletPage() {
                 <div style={{ textAlign: 'center', padding: '16px 0' }}>
                   <button onClick={handleLoadMore} disabled={loadingMore}
                     style={{ padding: '10px 24px', borderRadius: '20px', border: '1px solid rgba(212,175,55,0.3)', background: 'rgba(212,175,55,0.08)', color: '#D4AF37', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
-                    {loadingMore ? 'A carregar...' : `Ver mais (${totalTx - transactions.length} restantes)`}
+                    loadingMore ? t('admin.users.loading') : t('wallet.viewMore') + ' (' + (totalTx - transactions.length) + ')'
                   </button>
                 </div>
               )}
@@ -490,7 +496,7 @@ export default function WalletPage() {
       <div style={{ margin: '16px 20px 0', background: 'rgba(212,175,55,0.06)', borderRadius: '16px', border: '1px solid rgba(212,175,55,0.15)', padding: '14px 16px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
         <Icon path={icons.info} size={18} color="#D4AF37" />
         <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0, lineHeight: '1.6' }}>
-          A carteira Mimu é integrada com <strong style={{ color: '#D4AF37' }}>Appy Pay</strong>. Depósitos são confirmados automaticamente. Para suporte, contacte-nos.
+          {t('wallet.noteText')}
         </p>
       </div>
 

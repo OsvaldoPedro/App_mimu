@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useServices } from '../../context/ServicesContext'
@@ -13,8 +14,8 @@ import { supabase } from '../../config/supabaseClient'
 import toast from 'react-hot-toast'
 
 
-const statusLabels = { pendente: 'Pendente', aceite: 'Aceite', em_curso: 'Em curso', concluido: 'Concluído', cancelado: 'Cancelado' }
-const paymentLabels = { pendente: 'Pendente', aguardando: 'Aguardando Confirmação', confirmado: 'Confirmado', pago_50: 'Pago 50%', pago: 'Pago' }
+// statusLabels defined inside component using t()
+// paymentLabels defined inside component using t()
 
 const LocalSpinner = () => (
   <div className="flex flex-col items-center justify-center py-10 animate-fade-in">
@@ -24,6 +25,9 @@ const LocalSpinner = () => (
 );
 
 export default function ProviderDashboard() {
+  const { t } = useTranslation()
+  const statusLabels = { pendente: t('status.pending'), aceite: t('status.accepted'), em_curso: t('status.inProgress'), concluido: t('status.completed'), cancelado: t('status.cancelled') }
+  const paymentLabels = { pendente: t('status.pending'), aguardando: t('status.awaiting'), confirmado: t('status.confirmed'), pago_50: t('status.paid50'), pago: t('status.paid') }
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { getProviderServices } = useServices()
@@ -136,11 +140,11 @@ export default function ProviderDashboard() {
       if (res) {
         toast.success(`Pedido ${statusLabels[status] || status} com sucesso!`)
       } else {
-        toast.error('Erro ao atualizar o estado do pedido.')
+        toast.error(t('dashboard.orderUpdateError'))
       }
     } catch (err) {
       console.error(err)
-      toast.error('Ocorreu um erro ao atualizar o estado.')
+      toast.error(t('dashboard.orderUpdateError'))
     }
     reload()
   }
@@ -154,7 +158,7 @@ export default function ProviderDashboard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h2 className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white mb-4">Conta Pendente de Aprovação</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white mb-4">{t('dashboard.provider.pendingTitle')}</h2>
           <p className="text-mimu-wine-light-text dark:text-gray-300 mb-8">
             Os seus dados de prestador foram recebidos e estão a ser avaliados pela nossa equipa administrativa. Assim que a sua conta for aprovada, terá acesso completo a este painel.
           </p>
@@ -162,7 +166,7 @@ export default function ProviderDashboard() {
             onClick={logout}
             className="px-6 py-3 bg-mimu-gold text-mimu-white-text font-bold rounded-xl hover:bg-[#b87d26] transition-colors transition-all duration-300 hover:shadow-md active:scale-95"
           >
-            Terminar Sessão
+            {t('dashboard.endSession')}
           </button>
         </div>
       </div>
@@ -181,7 +185,7 @@ export default function ProviderDashboard() {
               <button 
                 onClick={() => setSearchParams({ tab: 'perfil' })}
                 className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-mimu-gold text-mimu-wine-text dark:text-white flex items-center justify-center shadow-md hover:bg-[#b87d26] transition active:scale-90 border-2 border-mimu-cream dark:border-[#121212]"
-                title="Editar Perfil"
+                title={t('dashboard.editProfile')}
               >
                 <svg className="w-3 h-3 text-mimu-wine-text dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
@@ -195,7 +199,7 @@ export default function ProviderDashboard() {
               <button 
                 onClick={() => setSearchParams({ tab: 'perfil' })}
                 className="w-7 h-7 rounded-full bg-mimu-gold/10 hover:bg-mimu-gold/20 text-mimu-gold flex items-center justify-center transition active:scale-90"
-                title="Editar Perfil"
+                title={t('dashboard.editProfile')}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
@@ -203,18 +207,18 @@ export default function ProviderDashboard() {
               </button>
             </div>
             <p className="text-mimu-wine-light-text dark:text-gray-300/80">
-              Painel do Prestador
+              {t('dashboard.provider.title')}
               {user?.status === 'pending_approval' && (
-                <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm">Pendente de Aprovação</span>
+                <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-sm">{t('dashboard.provider.pendingApproval')}</span>
               )}
             </p>
           </div>
         </div>
         <div className="flex gap-4">
           <Link to="/" className="px-4 py-2 border-2 border-mimu-gold text-mimu-gold rounded-xl font-medium hover:bg-mimu-gold/10">
-            Explorar App
+            {t('dashboard.exploreApp')}
           </Link>
-          <button onClick={logout} className="px-4 py-2 text-mimu-wine-light-text dark:text-gray-300/80 hover:text-mimu-wine-text dark:text-white min-h-[44px]">Sair</button>
+          <button onClick={logout} className="px-4 py-2 text-mimu-wine-light-text dark:text-gray-300/80 hover:text-mimu-wine-text dark:text-white min-h-[44px]">{t('auth.logout')}</button>
         </div>
       </div>
 
@@ -223,19 +227,19 @@ export default function ProviderDashboard() {
         {activeMainTab === 'visao' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">Serviços ativos</p>
+              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">{t('dashboard.provider.activeServices')}</p>
               <p className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white">{user?.serviceTypes?.length || 0}</p>
             </div>
             <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">Reservas recebidas</p>
+              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">{t('dashboard.provider.receivedBookings')}</p>
               <p className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white">{orders.length}</p>
             </div>
             <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">Ganhos líquidos (simulação)</p>
+              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">{t('dashboard.provider.netEarnings')}</p>
               <p className="text-xl md:text-2xl font-bold text-green-600">{new Intl.NumberFormat('pt-AO').format(ganhosSimulados)} AOA</p>
             </div>
             <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">Dívida pendente (simulação)</p>
+              <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-sm">{t('dashboard.provider.pendingDebt')}</p>
               <p className="text-xl md:text-2xl font-bold text-amber-600">{new Intl.NumberFormat('pt-AO').format(dividaSimulada)} AOA</p>
             </div>
           </div>
@@ -244,12 +248,12 @@ export default function ProviderDashboard() {
         {/* Menu em Cubos */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
           {[
-            { id: 'visao', label: 'Visão Geral', icon: '📊', gradient: 'from-[#3B82F6] to-[#1D4ED8]', shadow: 'shadow-blue-500/30' },
-            { id: 'reservas', label: 'Reservas', count: orders.length, icon: '📅', gradient: 'from-[#10B981] to-[#047857]', shadow: 'shadow-emerald-500/30' },
-            { id: 'servicos', label: 'Serviços', icon: '🛠️', gradient: 'from-[#F59E0B] to-[#B45309]', shadow: 'shadow-amber-500/30' },
-            { id: 'avaliacoes', label: 'Avaliações', icon: '⭐', gradient: 'from-[#8B5CF6] to-[#6D28D9]', shadow: 'shadow-purple-500/30' },
-            { id: 'pagamentos', label: 'Pagamentos', icon: '💳', gradient: 'from-[#EF4444] to-[#B91C1C]', shadow: 'shadow-red-500/30' },
-            { id: 'novidades', label: 'Eventos', icon: '🎉', gradient: 'from-[#EC4899] to-[#BE185D]', shadow: 'shadow-pink-500/30' }
+            { id: 'visao', label: t('dashboard.provider.overview'), icon: '📊', gradient: 'from-[#3B82F6] to-[#1D4ED8]', shadow: 'shadow-blue-500/30' },
+            { id: 'reservas', label: t('dashboard.provider.bookings'), count: orders.length, icon: '📅', gradient: 'from-[#10B981] to-[#047857]', shadow: 'shadow-emerald-500/30' },
+            { id: 'servicos', label: t('dashboard.provider.services'), icon: '🛠️', gradient: 'from-[#F59E0B] to-[#B45309]', shadow: 'shadow-amber-500/30' },
+            { id: 'avaliacoes', label: t('dashboard.provider.reviews'), icon: '⭐', gradient: 'from-[#8B5CF6] to-[#6D28D9]', shadow: 'shadow-purple-500/30' },
+            { id: 'pagamentos', label: t('dashboard.provider.payments'), icon: '💳', gradient: 'from-[#EF4444] to-[#B91C1C]', shadow: 'shadow-red-500/30' },
+            { id: 'novidades', label: t('dashboard.provider.events'), icon: '🎉', gradient: 'from-[#EC4899] to-[#BE185D]', shadow: 'shadow-pink-500/30' }
           ].map(t => (
             <button
               key={t.id}
@@ -280,8 +284,8 @@ export default function ProviderDashboard() {
         <div className="bg-mimu-white dark:bg-[#1E1E1E] rounded-3xl shadow-sm border border-mimu-cream-border dark:border-[#2A2A2A] p-4 md:p-6 mb-8 overflow-hidden">
           {activeMainTab === 'visao' && (
             <div className="space-y-4">
-              <h2 className="text-lg font-bold text-mimu-wine-text dark:text-white">Resumo</h2>
-              <p className="text-mimu-wine-light-text dark:text-gray-300/80">Pendentes: {pendentes.length} | Confirmadas: {confirmadas.length} | Concluídas: {concluidas.length}</p>
+              <h2 className="text-lg font-bold text-mimu-wine-text dark:text-white">{t('dashboard.provider.summary')}</h2>
+              <p className="text-mimu-wine-light-text dark:text-gray-300/80">{t('dashboard.provider.pendingCount')}: {pendentes.length} | {t('dashboard.provider.confirmedCount')}: {confirmadas.length} | {t('dashboard.provider.completedCount')}: {concluidas.length}</p>
               <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/60">
                 Lógica de comissão: Pagamento_recebido → dividir comissão | Pagamento_parcial → proporcional | Pagamento_manual → gerar dívida | Dívida_excedida → bloquear | Dívida_liquidada → desbloquear
               </p>
@@ -290,11 +294,11 @@ export default function ProviderDashboard() {
 
           {activeMainTab === 'reservas' && (
             <div>
-              <h2 className="text-lg font-bold text-mimu-wine-text dark:text-white mb-4">Todas as reservas</h2>
+              <h2 className="text-lg font-bold text-mimu-wine-text dark:text-white mb-4">{t('dashboard.provider.allBookings')}</h2>
               {ordersLoading ? (
                 <LocalSpinner />
               ) : orders.length === 0 ? (
-                <p className="text-mimu-wine-light-text dark:text-gray-300/80 animate-fade-in">Ainda não recebeste reservas.</p>
+                <p className="text-mimu-wine-light-text dark:text-gray-300/80 animate-fade-in">{t('dashboard.provider.noBookings')}</p>
               ) : (
                 <div className="space-y-4 animate-fade-in">
                   {orders.map(o => (
@@ -306,23 +310,23 @@ export default function ProviderDashboard() {
                       <div className="flex flex-wrap justify-between items-start gap-4">
                         <div>
                           <p className="font-medium text-mimu-wine-text dark:text-white">{o.serviceName}</p>
-                          <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">Cliente: {o.clientName}</p>
-                          <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">Data: {o.date} • {o.time || ''}</p>
-                          <p className="text-xs text-mimu-wine-light-text dark:text-gray-300/60">Método pagamento: {o.paymentMethod || 'Não definido'} | Estado: {paymentLabels[o.paymentStatus] || o.paymentStatus || 'Pendente'}</p>
+                          <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">{t('dashboard.provider.clientLabel')}: {o.clientName}</p>
+                          <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">{t('dashboard.provider.dateLabel')}: {o.date} • {o.time || ''}</p>
+                          <p className="text-xs text-mimu-wine-light-text dark:text-gray-300/60">{t('dashboard.provider.paymentMethodLabel')}: {o.paymentMethod || t('dashboard.notDefined')} | Estado: {paymentLabels[o.paymentStatus] || o.paymentStatus || 'Pendente'}</p>
                         </div>
                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                           <span className="px-3 py-1 rounded-lg text-sm bg-mimu-gray-100 dark:bg-[#121212]">{statusLabels[o.status]}</span>
                           {o.status === 'pendente' && (
                             <>
-                              <button onClick={() => handleStatus(o.id, 'aceite')} className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium hover:bg-green-200 transition">Aceitar</button>
-                              <button onClick={() => handleStatus(o.id, 'cancelado')} className="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm font-medium hover:bg-red-200 transition">Rejeitar</button>
+                              <button onClick={() => handleStatus(o.id, 'aceite')} className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium hover:bg-green-200 transition">{t('dashboard.accept')}</button>
+                              <button onClick={() => handleStatus(o.id, 'cancelado')} className="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm font-medium hover:bg-red-200 transition">{t('dashboard.reject')}</button>
                             </>
                           )}
                           {o.status === 'aceite' && (
-                            <button onClick={() => handleStatus(o.id, 'em_curso')} className="px-3 py-1 bg-mimu-gold/20 text-mimu-gold rounded-lg text-sm font-medium hover:bg-mimu-gold/30 transition">Em curso</button>
+                            <button onClick={() => handleStatus(o.id, 'em_curso')} className="px-3 py-1 bg-mimu-gold/20 text-mimu-gold rounded-lg text-sm font-medium hover:bg-mimu-gold/30 transition">{t('dashboard.inProgress')}</button>
                           )}
                           {o.status === 'em_curso' && (
-                            <button onClick={() => handleStatus(o.id, 'concluido')} className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium hover:bg-green-200 transition">Concluir</button>
+                            <button onClick={() => handleStatus(o.id, 'concluido')} className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-medium hover:bg-green-200 transition">{t('dashboard.complete')}</button>
                           )}
                         </div>
                       </div>
@@ -336,7 +340,7 @@ export default function ProviderDashboard() {
           {activeMainTab === 'servicos' && (
             <div>
               <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <h2 className="text-lg font-bold text-mimu-wine-text dark:text-white">Gestão de Serviços</h2>
+                <h2 className="text-lg font-bold text-mimu-wine-text dark:text-white">{t('dashboard.provider.serviceManagement')}</h2>
                 <div className="flex gap-2">
                   <Link
                     to="/prestador/servicos/criar"

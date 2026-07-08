@@ -1,4 +1,5 @@
 import { updateOrderStatus } from '../../hooks/useOrders'
+import { useTranslation } from 'react-i18next'
 import { useAllOrders } from '../../hooks/useAdmin'
 
 export default function AdminOrders() {
@@ -11,7 +12,7 @@ export default function AdminOrders() {
 
   return (
     <div className="w-full">
-        <h1 className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-wine-text dark:text-white mb-6 md:mb-8">Pedidos / Reservas</h1>
+        <h1 className="text-xl md:text-2xl sm:text-3xl font-bold text-mimu-wine-text dark:text-white mb-6 md:mb-8">{t('admin.orders.title')}</h1>
 
         <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300">
           <div className="space-y-4">
@@ -28,9 +29,9 @@ export default function AdminOrders() {
                     {order.status}
                   </span>
                 </div>
-                <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">Cliente: {order.clientName}</p>
-                <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">Prestador/Empresa: {order.providerName || 'N/A'}</p>
-                <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">Valor: {order.total} Kz</p>
+                <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">{t('admin.orders.client')}: {order.clientName}</p>
+                <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">{t('admin.orders.providerCompany')}: {order.providerName || 'N/A'}</p>
+                <p className="text-sm text-mimu-wine-light-text dark:text-gray-300/80">{t('admin.orders.value')}: {order.total} Kz</p>
                 <div className="mt-4 space-x-2">
                   {['pendente', 'confirmado', 'concluido', 'cancelado'].map((status) => (
                     <button
@@ -48,7 +49,7 @@ export default function AdminOrders() {
             ))}
           </div>
 
-          {loading && <p className="text-mimu-wine-text dark:text-white mt-4">A carregar...</p>}
+          {loading && <p className="text-mimu-wine-text dark:text-white mt-4">{t('admin.users.loading')}</p>}
           {!loading && hasMore && orders.length > 0 && (
             <div className="mt-8 flex justify-center">
               <button 
