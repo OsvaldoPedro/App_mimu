@@ -33,22 +33,22 @@ const icons = {
   eyeOff: 'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22',
 }
 
-// ─── Type labels ──────────────────────────────────────────────────────────────
-const typeConfig = {
+// ─── Type labels (factory functions — t() only called inside components) ─────
+const getTypeConfig = (t) => ({
   deposit: { label: t('wallet.typeDeposit'), color: '#10B981', bg: '#064E3B', sign: '+', icon: icons.deposit },
   withdrawal: { label: t('wallet.typeWithdrawal'), color: '#F59E0B', bg: '#451A03', sign: '-', icon: icons.withdraw },
   payment: { label: t('wallet.typePayment'), color: '#EF4444', bg: '#450A0A', sign: '-', icon: icons.withdraw },
   transfer_in: { label: t('wallet.typeTransferIn'), color: '#10B981', bg: '#064E3B', sign: '+', icon: icons.transfer },
   transfer_out: { label: t('wallet.typeTransferOut'), color: '#8B5CF6', bg: '#2E1065', sign: '-', icon: icons.transfer },
   refund: { label: t('wallet.typeRefund'), color: '#06B6D4', bg: '#0C4A6E', sign: '+', icon: icons.deposit },
-}
+})
 
-const statusConfig = {
+const getStatusConfig = (t) => ({
   completed: { label: t('wallet.statusCompleted'), color: '#10B981' },
   pending: { label: t('wallet.statusPending'), color: '#F59E0B' },
   failed: { label: t('wallet.statusFailed'), color: '#EF4444' },
   cancelled: { label: t('wallet.statusCancelled'), color: '#6B7280' },
-}
+})
 
 // ─── Modal genérico ───────────────────────────────────────────────────────────
 function Modal({ title, children, onClose }) {
@@ -293,6 +293,8 @@ function TransferModal({ balance, onClose, onSuccess }) {
 // ─── Transaction Row ──────────────────────────────────────────────────────────
 function TxRow({ tx }) {
   const { t } = useTranslation()
+  const typeConfig = getTypeConfig(t)
+  const statusConfig = getStatusConfig(t)
   const cfg = typeConfig[tx.type] || { label: tx.type, color: '#9CA3AF', bg: '#1f1f1f', sign: '', icon: icons.history }
   const st = statusConfig[tx.status] || { label: tx.status, color: '#9CA3AF' }
   const date = new Date(tx.created_at).toLocaleDateString('pt-AO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
