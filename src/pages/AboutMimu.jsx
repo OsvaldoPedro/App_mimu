@@ -29,6 +29,38 @@ export default function AboutMimu() {
             <p>
               Acreditamos que a tecnologia deve servir as pessoas. Por isso, desenvolvemos a Mimu para ser intuitiva, acessível e segura, garantindo sempre a proteção e privacidade dos intervenientes.
             </p>
+
+            {/* ── Equipa de Desenvolvimento ── */}
+            <h2 className="text-xl md:text-2xl font-semibold text-mimu-gold mt-10 mb-4">Equipa de Desenvolvimento</h2>
+            <p className="mb-5">
+              A Mimu App foi desenvolvida com a colaboração dos seguintes membros:
+            </p>
+
+            <ul className="space-y-4">
+              <li className="flex items-start gap-4 p-4 rounded-2xl bg-mimu-cream/60 dark:bg-[#2A2A2A] border border-mimu-cream-border dark:border-[#333]">
+                <span className="w-10 h-10 rounded-full bg-mimu-gold/20 flex items-center justify-center text-mimu-gold font-bold text-lg shrink-0">JQ</span>
+                <div>
+                  <p className="font-bold text-mimu-wine-text dark:text-white">José Quinvula</p>
+                  <p className="text-sm mt-0.5">Responsável pelo desenvolvimento do Back-End e da Base de Dados.</p>
+                </div>
+              </li>
+
+              <li className="flex items-start gap-4 p-4 rounded-2xl bg-mimu-cream/60 dark:bg-[#2A2A2A] border border-mimu-cream-border dark:border-[#333]">
+                <span className="w-10 h-10 rounded-full bg-mimu-gold/20 flex items-center justify-center text-mimu-gold font-bold text-lg shrink-0">OP</span>
+                <div>
+                  <p className="font-bold text-mimu-wine-text dark:text-white">Osvaldo Pedro</p>
+                  <p className="text-sm mt-0.5">Responsável pelo desenvolvimento da aplicação e pela integração entre o Front-End e o Back-End.</p>
+                </div>
+              </li>
+
+              <li className="flex items-start gap-4 p-4 rounded-2xl bg-mimu-cream/60 dark:bg-[#2A2A2A] border border-mimu-cream-border dark:border-[#333]">
+                <span className="w-10 h-10 rounded-full bg-mimu-gold/20 flex items-center justify-center text-mimu-gold font-bold text-lg shrink-0">AK</span>
+                <div>
+                  <p className="font-bold text-mimu-wine-text dark:text-white">Adelardo Kindande</p>
+                  <p className="text-sm mt-0.5">Responsável pelo desenvolvimento do sistema de eventos da aplicação.</p>
+                </div>
+              </li>
+            </ul>
           </div>
         </div>
       </main>
