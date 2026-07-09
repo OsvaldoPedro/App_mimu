@@ -16,14 +16,15 @@ export default function Support() {
               <div className="text-xl md:text-2xl md:text-3xl md:text-4xl mb-3">📧</div>
               <h3 className="text-xl font-bold text-mimu-wine-text dark:text-white mb-2">E-Mail</h3>
               <p className="text-mimu-wine-light-text dark:text-gray-300/80 mb-1">Para suporte técnico ou dúvidas abrangentes, escreva para:</p>
-              <a href="mailto:mimuagente@gmail.com" className="text-mimu-gold font-bold hover:underline">mimuagente@gmail.com</a>
+              <a href="mailto:mimuagente@gmail.com" className="block text-mimu-gold font-bold hover:underline">mimuagente@gmail.com</a>
+              <a href="mailto:mimuu360@gmail.com" className="block text-mimu-gold font-bold hover:underline mt-1">mimuu360@gmail.com</a>
             </div>
 
             <div className="bg-mimu-cream dark:bg-[#121212]/50 p-4 md:p-6 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A]">
               <div className="text-xl md:text-2xl md:text-3xl md:text-4xl mb-3">📞</div>
               <h3 className="text-xl font-bold text-mimu-wine-text dark:text-white mb-2">Telefone</h3>
               <p className="text-mimu-wine-light-text dark:text-gray-300/80 mb-1">Linha de atendimento para questões urgentes:</p>
-              <a href="tel:+244922157099" className="text-mimu-gold font-bold hover:underline">+244 922 157 099</a>
+              <a href="tel:+244939926255" className="text-mimu-gold font-bold hover:underline">+244 939 926 255</a>
             </div>
           </div>
 
