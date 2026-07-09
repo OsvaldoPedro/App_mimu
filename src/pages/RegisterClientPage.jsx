@@ -25,10 +25,15 @@ export default function RegisterClientPage() {
 
   const [showOtp, setShowOtp] = useState(false)
   const [phoneToVerify, setPhoneToVerify] = useState('')
+  const [registering, setRegistering] = useState(false)
 
   useEffect(() => {
     if (user) {
-      const target = user.role === 'company' ? '/empresa' : user.role === 'provider' ? '/prestador' : user.role === 'admin' ? '/admin' : '/painel'
+      const role = user.role?.trim().toLowerCase() ?? ''
+      const target = ['company', 'empresa'].includes(role) ? '/empresa'
+        : ['provider', 'prestador'].includes(role) ? '/prestador'
+        : role === 'admin' ? '/admin'
+        : '/painel'
       navigate(target, { replace: true })
     }
   }, [user, navigate])
@@ -135,7 +140,13 @@ export default function RegisterClientPage() {
 
           {error && <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-xl text-sm">{error}</div>}
 
-          {showOtp ? (
+          {registering ? (
+            <div key="stage-registering" className="animate-fade-in text-center py-12 space-y-4">
+              <div className="w-16 h-16 border-4 border-mimu-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <p className="text-mimu-wine-text dark:text-white font-semibold text-lg">{t('register.creatingAccount', 'A criar conta...')}</p>
+              <p className="text-mimu-wine-light-text dark:text-gray-400 text-sm">A iniciar sessão automaticamente...</p>
+            </div>
+          ) : showOtp ? (
             <div key="stage-otp" className="animate-fade-in">
               <PhoneOTPVerification
                 phone={phoneToVerify}
@@ -143,25 +154,28 @@ export default function RegisterClientPage() {
                 onCancel={() => setShowOtp(false)}
                 onVerifySuccess={async () => {
                   // Proceder com a criação da conta após OTP verificado
-                  setLoading(true)
+                  setRegistering(true)
                   const result = await registerClient({
                     name: form.name,
                     email: form.email,
                     phone: phoneToVerify,
                     password: form.password
                   })
-                  setLoading(false)
                   if (result.success) {
+                    // Não navegar aqui! O useEffect observa o estado `user` do AuthContext
+                    // e navega automaticamente assim que o login automático ficar pronto.
                     toast.success(t('register.accountCreatedSuccess', 'Conta criada com sucesso! Bem-vindo(a).'))
-                    navigate('/painel', { replace: true })
+                    // Aguardar até 8 segundos pelo login automático via onAuthStateChange
+                    setTimeout(() => setRegistering(false), 8000)
                   } else {
+                    setRegistering(false)
                     setError(result.error)
                     setShowOtp(false)
                   }
                 }}
               />
             </div>
-          ) : (
+          ) : showOtp ? null : (
             <form key="stage-form" onSubmit={handleRegister} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('register.name', 'Nome Completo')}</label>

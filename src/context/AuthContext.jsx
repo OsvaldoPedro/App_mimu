@@ -85,7 +85,7 @@ export function AuthProvider({ children }) {
     }
   }, []) // empty deps array keeps this running only once
 
-  const fetchProfile = async (userId, userEmail = '') => {
+  const fetchProfile = async (userId, userEmail = '', retryCount = 0) => {
     try {
       fetchedUserIdRefs.current = userId; // Mark as fetched/fetching to block double requests
       const { data, error } = await supabase
@@ -120,7 +120,6 @@ export function AuthProvider({ children }) {
                  }
               } else if (pendingProfile.id === userId) {
                  // If it's just other data, or role is already correct, clear it or sync if needed.
-                 // For now, if role is correct, just remove it to avoid endless attempts.
                  if (data.role === pendingProfile.role) {
                     localStorage.removeItem('pending_mimu_profile');
                  }
@@ -156,8 +155,16 @@ export function AuthProvider({ children }) {
         }
 
         if (!profileRestored) {
-          // O perfil não existe na BD e não há registo pendente no localStorage: o utilizador foi apagado!
-          console.warn("Perfil de utilizador não encontrado na BD e sem registo pendente local. A terminar sessão...");
+          // Perfil não encontrado. Pode ser timing da trigger AFTER INSERT.
+          // Tentar até 3 vezes antes de concluir que o utilizador foi apagado.
+          if (retryCount < 3) {
+            console.warn(`Perfil não encontrado, a tentar novamente (tentativa ${retryCount + 1}/3)...`);
+            await new Promise(resolve => setTimeout(resolve, 1200));
+            fetchedUserIdRefs.current = null; // Permitir nova tentativa
+            return fetchProfile(userId, userEmail, retryCount + 1);
+          }
+          // Após 3 tentativas sem sucesso: o utilizador foi apagado!
+          console.warn('Perfil de utilizador não encontrado na BD após 3 tentativas. A terminar sessão...');
           await supabase.auth.signOut();
           setUser(null);
           fetchedUserIdRefs.current = null;
