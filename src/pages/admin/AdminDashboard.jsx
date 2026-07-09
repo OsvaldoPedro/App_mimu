@@ -23,6 +23,49 @@ export default function AdminDashboard() {
   const [categoryData, setCategoryData] = useState([])
   const [recentSearches, setRecentSearches] = useState([])
   const [topSearches, setTopSearches] = useState([])
+  const [refreshing, setRefreshing] = useState(false)
+  const [lastRefreshed, setLastRefreshed] = useState(null)
+
+  // Fetch de pesquisas — função independente para poder ser chamada no polling
+  const fetchSearchData = async () => {
+    const { data: recentSearchesData } = await supabase
+      .from('search_history')
+      .select('id, query, created_at, user_id, profiles:user_id(name, email)')
+      .order('created_at', { ascending: false })
+      .limit(8)
+
+    if (recentSearchesData) {
+      setRecentSearches(recentSearchesData)
+    }
+
+    const { data: allSearches } = await supabase
+      .from('search_history')
+      .select('query')
+      .order('created_at', { ascending: false })
+      .limit(2000)
+
+    if (allSearches) {
+      const searchCountMap = {}
+      allSearches.forEach(item => {
+        const raw = item.query.trim()
+        const capitalized = raw.charAt(0).toUpperCase() + raw.slice(1)
+        searchCountMap[capitalized] = (searchCountMap[capitalized] || 0) + 1
+      })
+      const sortedTop = Object.entries(searchCountMap)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5)
+      setTopSearches(sortedTop)
+    }
+
+    setLastRefreshed(new Date())
+  }
+
+  const handleManualRefresh = async () => {
+    setRefreshing(true)
+    await fetchSearchData()
+    setRefreshing(false)
+  }
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -39,13 +82,10 @@ export default function AdminDashboard() {
         const ordersToday = orders.filter(order => new Date(order.created_at) >= today).length
         const ordersMonth = orders.filter(order => new Date(order.created_at) >= monthStart).length
         
-        // Revenue should count from realistically completed orders
         const completedOnly = orders.filter(order => order.status === 'concluido')
         const totalRevenue = completedOnly.reduce((sum, order) => sum + (Number(order.total) || 0), 0)
-        
         const completedServices = completedOnly.length
 
-        // Build Weekly Data (last 7 days)
         const last7Days = Array.from({length: 7}, (_, i) => {
           const d = new Date()
           d.setDate(d.getDate() - (6 - i))
@@ -53,23 +93,17 @@ export default function AdminDashboard() {
         })
 
         const catMap = {}
-
         orders.forEach(order => {
           const orderDate = new Date(order.created_at).toISOString().split('T')[0]
           const dayMatch = last7Days.find(d => d.date === orderDate)
-          if (dayMatch) {
-            dayMatch.Pedidos += 1
-          }
-
-          // Build Category/Service counts
+          if (dayMatch) dayMatch.Pedidos += 1
           if (order.service_name) {
-             catMap[order.service_name] = (catMap[order.service_name] || 0) + 1
+            catMap[order.service_name] = (catMap[order.service_name] || 0) + 1
           }
         })
 
         const catArray = Object.entries(catMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value).slice(0, 5)
 
-        // Contagem de Eventos, Empresas, Prestadores e Parceiros
         const [{ count: totalEvents }, { count: totalCompanies }, { count: totalProviders }, { data: allPartners }] = await Promise.all([
           supabase.from('events').select('*', { count: 'exact', head: true }),
           supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'company'),
@@ -94,42 +128,15 @@ export default function AdminDashboard() {
         setRecentOrders(orders.slice(0, 5))
         setWeeklyData(last7Days)
         setCategoryData(catArray.length ? catArray : [{ name: t('admin.noData'), value: 1 }])
-
-        // Fetch recent searches
-        const { data: recentSearchesData } = await supabase
-          .from('search_history')
-          .select('id, query, created_at, user_id, profiles:user_id(name, email)')
-          .order('created_at', { ascending: false })
-          .limit(8)
-
-        if (recentSearchesData) {
-          setRecentSearches(recentSearchesData)
-        }
-
-        // Fetch and calculate top searches
-        const { data: allSearches } = await supabase
-          .from('search_history')
-          .select('query')
-          .order('created_at', { ascending: false })
-          .limit(2000)
-
-        if (allSearches) {
-          const searchCountMap = {}
-          allSearches.forEach(item => {
-            const raw = item.query.trim()
-            const capitalized = raw.charAt(0).toUpperCase() + raw.slice(1)
-            searchCountMap[capitalized] = (searchCountMap[capitalized] || 0) + 1
-          })
-          const sortedTop = Object.entries(searchCountMap)
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5)
-          setTopSearches(sortedTop)
-        }
       }
     }
 
     fetchAdminData()
+    fetchSearchData() // Primeiro fetch de pesquisas imediato
+
+    // Auto-refresh a cada 30 segundos para manter o histórico de pesquisas atualizado
+    const searchInterval = setInterval(fetchSearchData, 30000)
+    return () => clearInterval(searchInterval)
   }, [])
 
   return (
@@ -274,9 +281,32 @@ export default function AdminDashboard() {
 
           {/* Últimas Pesquisas */}
           <div className="bg-mimu-white dark:bg-[#1E1E1E] p-4 sm:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300">
-            <h3 className="text-lg sm:text-xl font-semibold text-mimu-wine-text dark:text-white mb-4 flex items-center gap-2">
-              <span>🔍</span> Histórico de Pesquisa Recente
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg sm:text-xl font-semibold text-mimu-wine-text dark:text-white flex items-center gap-2">
+                <span>🔍</span> Histórico de Pesquisa Recente
+              </h3>
+              <div className="flex items-center gap-2">
+                {lastRefreshed && (
+                  <span className="text-xs text-gray-400 hidden sm:block">
+                    {lastRefreshed.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </span>
+                )}
+                <button
+                  onClick={handleManualRefresh}
+                  disabled={refreshing}
+                  title="Atualizar agora"
+                  className="p-1.5 rounded-lg bg-mimu-cream/50 dark:bg-[#2A2A2A] hover:bg-mimu-gold/20 transition-colors disabled:opacity-50"
+                >
+                  <svg
+                    className={`w-4 h-4 text-mimu-gold ${refreshing ? 'animate-spin' : ''}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs sm:text-sm">
                 <thead>

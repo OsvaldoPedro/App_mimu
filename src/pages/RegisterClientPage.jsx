@@ -39,6 +39,11 @@ export default function RegisterClientPage() {
     if (name === 'phone') {
       value = enforceNumeric(value).substring(0, 9)
     }
+    // Para o campo email/telefone: se só tem dígitos, limitar a 9
+    if (name === 'email') {
+      const onlyDigits = value.replace(/\D/g, '') === value.trim() && !value.includes('@') && value.trim() !== ''
+      if (onlyDigits && value.replace(/\D/g, '').length > 9) return
+    }
     if (name === 'name') {
       value = enforceAlphaText(value)
     }
@@ -60,7 +65,7 @@ export default function RegisterClientPage() {
     const isEmail = isValidEmail(form.email);
     
     if (!isEmail && !isPhone) {
-      setError(t('register.invalidEmailPhone', 'Por favor, insira um e-mail válido ou um número de telefone com 9 dígitos.'))
+      setError(t('register.invalidEmailPhone', 'Por favor, insira um e-mail válido ou um número de telefone válido.'))
       return
     }
 
@@ -165,7 +170,8 @@ export default function RegisterClientPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">{t('auth.emailPhoneLabel', 'E-mail / Telefone')}</label>
-                <input name="email" type="text" value={form.email} onChange={handleChange} required placeholder={t('auth.emailPhonePlaceholder', 'Digite seu e-mail ou telefone')}
+                <input name="email" type="text" value={form.email} onChange={handleChange} required
+                  placeholder={t('auth.emailPhonePlaceholder', 'E-mail ou telef. (9 dígitos)')} maxLength={form.email.includes('@') ? undefined : 9}
                   className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
               </div>
 

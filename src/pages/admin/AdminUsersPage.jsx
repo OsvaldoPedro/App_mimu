@@ -38,8 +38,8 @@ export default function AdminUsersPage() {
     setSendingBroadcast(true)
     
     if (['all', 'client', 'company', 'provider'].includes(broadcastTarget)) {
-      const { success } = await sendBroadcastNotification(broadcastTarget, broadcastTitle, broadcastMessage)
-      if (success) alert(t('admin.users.broadcastSuccess'))
+      const { success, count } = await sendBroadcastNotification(broadcastTarget, broadcastTitle, broadcastMessage)
+      if (success) alert(`${t('admin.users.broadcastSuccess')} (${count} utilizadores notificados)`)
       else alert(t('admin.users.broadcastError'))
     } else {
       // É um utilizador específico (broadcastTarget === userId)

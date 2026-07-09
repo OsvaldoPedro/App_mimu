@@ -37,6 +37,15 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const handleEmailChange = (e) => {
+    const val = e.target.value
+    // Se o utilizador está a digitar apenas números (telefone), limitar a 9 dígitos
+    const digits = val.replace(/\D/g, '')
+    const isAllDigits = val.trim() !== '' && !val.includes('@') && val.replace(/\D/g, '') === val.trim()
+    if (isAllDigits && digits.length > 9) return // bloquear mais de 9 dígitos
+    setEmail(val)
+  }
+
   const handleLogin = async (e) => {
     e.preventDefault()
     setError('')
@@ -85,10 +94,11 @@ export default function LoginPage() {
               <input
                 type="text"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 required
+                inputMode="text"
                 className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none"
-                placeholder={t('auth.emailPhonePlaceholder', 'Digite seu e-mail ou telefone')}
+                placeholder={t('auth.emailPhonePlaceholder', 'Digite seu e-mail ou telefone (9 dígitos)')}
               />
             </div>
             

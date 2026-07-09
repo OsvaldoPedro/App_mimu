@@ -43,6 +43,7 @@ export default function ClientDashboard() {
   const [walletBalance, setWalletBalance] = useState(null)
   const [walletLoading, setWalletLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('orders')
+  const [announcements, setAnnouncements] = useState([])
 
   const fetchPayments = async () => {
     if (!user?.id) return
@@ -74,9 +75,20 @@ export default function ClientDashboard() {
     setWalletLoading(false)
   }
 
+  const fetchAnnouncements = async () => {
+    const { data, error } = await supabase
+      .from('announcements')
+      .select('id, title, message, created_at, target_role')
+      .or('target_role.eq.all,target_role.eq.client')
+      .order('created_at', { ascending: false })
+      .limit(20)
+    if (!error && data) setAnnouncements(data)
+  }
+
   useEffect(() => {
     fetchPayments()
     fetchWalletBalance()
+    fetchAnnouncements()
   }, [user?.id])
 
   // Realtime: actualizar saldo da carteira quando sofrer alterações
@@ -228,49 +240,82 @@ export default function ClientDashboard() {
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="max-w-5xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div className="flex items-center gap-4">
-              {(user?.avatar_url || user?.logo_url) && (
-                <div className="relative shrink-0 group">
-                  <div className="w-16 h-16 rounded-full bg-mimu-gold flex items-center justify-center text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white overflow-hidden shadow-sm group-hover:shadow transition duration-300">
-                    <OptimizedImage src={user.avatar_url || user.logo_url} alt="" className="w-full h-full transition-transform duration-300 group-hover:scale-105" objectFit="cover" />
-                  </div>
-                  <button 
-                    onClick={() => setSearchParams({ tab: 'perfil' })}
-                    className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-mimu-gold text-mimu-wine-text dark:text-white flex items-center justify-center shadow-md hover:bg-[#b87d26] transition active:scale-90 border-2 border-mimu-cream dark:border-[#121212]"
-                    title={t('dashboard.editProfile')}
-                  >
-                    <svg className="w-3 h-3 text-mimu-wine-text dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                    </svg>
-                  </button>
+          {/* ===== CABEÇALHO DO PERFIL ===== */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            {/* Lado esquerdo: avatar + informações */}
+            <div className="flex items-center gap-5">
+
+              {/* Círculo do avatar com botão de edição */}
+              <div className="relative shrink-0">
+                {/* Círculo principal */}
+                <div className="w-20 h-20 rounded-full border-2 border-white/30 dark:border-white/20 bg-mimu-cream/60 dark:bg-[#2A2A2A] flex items-center justify-center overflow-hidden shadow-md">
+                  {(user?.avatar_url || user?.logo_url) ? (
+                    <OptimizedImage
+                      src={user.avatar_url || user.logo_url}
+                      alt={user?.name || ''}
+                      className="w-full h-full"
+                      objectFit="cover"
+                    />
+                  ) : (
+                    /* Placeholder — inicial do nome ou ícone de silhueta */
+                    user?.name ? (
+                      <span className="text-2xl font-bold text-mimu-gold select-none">
+                        {user.name.trim().charAt(0).toUpperCase()}
+                      </span>
+                    ) : (
+                      <svg className="w-10 h-10 text-mimu-wine-light-text/40 dark:text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                      </svg>
+                    )
+                  )}
                 </div>
-              )}
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl md:text-2xl font-bold text-mimu-wine-text dark:text-white">{user?.name}</h1>
-                  <button 
-                    onClick={() => setSearchParams({ tab: 'perfil' })}
-                    className="w-7 h-7 rounded-full bg-mimu-gold/10 hover:bg-mimu-gold/20 text-mimu-gold flex items-center justify-center transition active:scale-90"
-                    title={t('dashboard.editProfile')}
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                    </svg>
-                  </button>
-                </div>
-                <p className="text-mimu-wine-light-text dark:text-gray-300/80">{t('dashboard.client.title')}</p>
+
+                {/* Botão de edição — posição 4h30 (bottom-right) */}
+                <button
+                  onClick={() => setSearchParams({ tab: 'perfil' })}
+                  className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-mimu-gold hover:bg-[#b87d26] flex items-center justify-center shadow-lg border-2 border-mimu-cream dark:border-[#121212] transition-all duration-200 active:scale-90 hover:shadow-mimu-gold/30"
+                  title={t('dashboard.editProfile')}
+                  style={{ transform: 'translate(2px, 2px)' }}
+                >
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Informações do utilizador — à direita do círculo */}
+              <div className="flex flex-col gap-0.5">
+                <h1 className="text-lg md:text-xl font-bold text-mimu-wine-text dark:text-white leading-tight">
+                  {user?.name || 'Utilizador'}
+                </h1>
+                <p className="text-sm text-mimu-wine-light-text dark:text-gray-400">
+                  {t('dashboard.client.title')}
+                </p>
+                {(user?.email || user?.phone) && (
+                  <p className="text-xs text-mimu-wine-light-text/70 dark:text-gray-500 mt-0.5 truncate max-w-[200px]">
+                    {user.email || (user.phone ? `+244 ${user.phone}` : '')}
+                  </p>
+                )}
               </div>
             </div>
-            <div className="flex gap-4">
-              <Link to="/" className="px-4 py-2 border-2 border-mimu-gold text-mimu-gold rounded-xl font-medium hover:bg-mimu-gold/10">
+
+            {/* Lado direito: acções */}
+            <div className="flex items-center gap-3 sm:ml-auto">
+              <Link
+                to="/"
+                className="px-4 py-2 border border-mimu-gold text-mimu-gold rounded-xl text-sm font-medium hover:bg-mimu-gold/10 transition-colors duration-200"
+              >
                 Explorar App
               </Link>
-              <button onClick={logout} className="px-4 py-2 text-mimu-wine-light-text dark:text-gray-300/80 hover:text-mimu-wine-text dark:text-white min-h-[44px]">
+              <button
+                onClick={logout}
+                className="px-4 py-2 text-sm text-mimu-wine-light-text dark:text-gray-400 hover:text-mimu-wine-text dark:hover:text-white transition-colors duration-200"
+              >
                 {t('auth.logout')}
               </button>
             </div>
           </div>
+
 
 
 
@@ -506,10 +551,22 @@ export default function ClientDashboard() {
             <div className="overflow-y-auto flex-1 pr-1">
               {notificationsLoading ? (
                 <LocalSpinner />
-              ) : notifications.length === 0 ? (
+              ) : (notifications.length === 0 && announcements.length === 0) ? (
                 <p className="text-mimu-wine-light-text dark:text-gray-300/80 text-center py-8">{t('dashboard.noNotifications')}</p>
               ) : (
                 <div className="space-y-2.5">
+                  {/* Comunicados do Admin */}
+                  {announcements.map(a => (
+                    <div key={`ann-${a.id}`} className="p-4 rounded-2xl border bg-mimu-gold/10 dark:bg-mimu-gold/5 border-mimu-gold/30">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold uppercase tracking-wider text-mimu-gold">📢 Comunicado</span>
+                      </div>
+                      <p className="text-sm font-bold text-mimu-wine-text dark:text-white">{a.title}</p>
+                      <p className="text-xs text-mimu-wine-light-text dark:text-gray-300/80 mt-1">{a.message}</p>
+                      <p className="text-[10px] text-mimu-wine-light-text/60 dark:text-gray-400 mt-2">{new Date(a.created_at).toLocaleString('pt-PT')}</p>
+                    </div>
+                  ))}
+                  {/* Notificações pessoais */}
                   {notifications.map(n => (
                     <div key={n.id} className={`p-4 rounded-2xl border transition duration-300 ${n.read ? 'bg-mimu-cream/30 dark:bg-[#121212]/30 border-mimu-cream-border dark:border-[#2A2A2A]' : 'bg-mimu-cream/60 dark:bg-[#1E1E1E] border-mimu-gold/25'}`}>
                       <p className="text-sm font-bold text-mimu-wine-text dark:text-white">

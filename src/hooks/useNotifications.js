@@ -10,7 +10,7 @@ export function useNotifications(userId) {
 
   const loadNotifications = useCallback(async (reset = false) => {
     if (!userId) return
-    
+
     const currentPage = reset ? 0 : page
     if (!reset && !hasMore) return
 
@@ -44,7 +44,7 @@ export function useNotifications(userId) {
       .eq('id', notificationId)
 
     if (!error) {
-      setNotifications(prev => prev.map(n => 
+      setNotifications(prev => prev.map(n =>
         n.id === notificationId ? { ...n, read: true } : n
       ))
     }
@@ -76,32 +76,52 @@ export async function addNotification(userId, title, message) {
 
 export async function sendBroadcastNotification(targetRole, title, message) {
   if (!title || !message) return { success: false, error: 'Título e mensagem são obrigatórios' }
-  
+
   try {
+    // Gravar o comunicado na tabela announcements — acessível a todos os utilizadores
+    // com o role correspondente, sem necessidade de inserir uma linha por utilizador
+    const { data: { session } } = await supabase.auth.getSession()
+    const adminId = session?.user?.id || null
+
+    const { error: announcementError } = await supabase
+      .from('announcements')
+      .insert({
+        title,
+        message,
+        target_role: targetRole || 'all',
+        created_by: adminId
+      })
+
+    if (announcementError) throw announcementError
+
+    // Também inserir notificações individuais para os utilizadores já existentes
+    // (compatibilidade com o sistema de notificações na Navbar)
     let query = supabase.from('profiles').select('id')
     if (targetRole && targetRole !== 'all') {
       query = query.eq('role', targetRole)
     }
 
     const { data: users, error: fetchError } = await query
-    
+
     if (fetchError) throw fetchError
-    if (!users || users.length === 0) return { success: true, count: 0 }
 
-    const notifications = users.map(u => ({
-      user_id: u.id,
-      title,
-      message,
-      read: false
-    }))
+    if (users && users.length > 0) {
+      const notifications = users.map(u => ({
+        user_id: u.id,
+        title,
+        message,
+        read: false
+      }))
 
-    const { error: insertError } = await supabase
-      .from('notifications')
-      .insert(notifications)
+      // Inserir em lotes de 50 para evitar timeouts
+      for (let i = 0; i < notifications.length; i += 50) {
+        const batch = notifications.slice(i, i + 50)
+        const { error: batchError } = await supabase.from('notifications').insert(batch)
+        if (batchError) console.warn('Erro ao inserir lote de notificações:', batchError)
+      }
+    }
 
-    if (insertError) throw insertError
-
-    return { success: true, count: users.length }
+    return { success: true, count: users?.length || 0 }
   } catch (error) {
     console.error('Erro ao enviar comunicado:', error)
     return { success: false, error }

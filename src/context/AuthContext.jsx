@@ -177,7 +177,8 @@ export function AuthProvider({ children }) {
     try {
       let loginEmail = emailOrPhone.trim();
       const cleanPhone = loginEmail.replace(/\D/g, '');
-      const isPhone = !loginEmail.includes('@') && cleanPhone.length >= 9 && cleanPhone.length <= 15;
+      // Aceitar apenas exatamente 9 dígitos como número de telefone angolano
+      const isPhone = !loginEmail.includes('@') && cleanPhone.length === 9;
       
       const payload = { password };
       if (isPhone) {
@@ -307,7 +308,8 @@ export function AuthProvider({ children }) {
     try {
       const cleanEmailPhone = email.trim();
       const cleanPhone = phone ? phone.replace(/\D/g, '') : (cleanEmailPhone.includes('@') ? null : cleanEmailPhone.replace(/\D/g, ''));
-      const isPhoneSignup = !cleanEmailPhone.includes('@') && cleanPhone && cleanPhone.length >= 9;
+      // Aceitar apenas exatamente 9 dígitos como número de telefone angolano
+      const isPhoneSignup = !cleanEmailPhone.includes('@') && cleanPhone && cleanPhone.length === 9;
 
       const authPayload = { password };
       if (isPhoneSignup) {
@@ -316,8 +318,40 @@ export function AuthProvider({ children }) {
         authPayload.email = cleanEmailPhone;
       }
 
-      // 1. Sign up on Supabase Auth
-      let { data: authData, error: authError } = await supabase.auth.signUp(authPayload)
+      // Pre-resolve Location Names for trigger profile creation
+      let provinceName = profileData.province;
+      let cityName = profileData.city;
+      
+      if (profileData.province && profileData.province.length > 30) {
+         const { data: pData } = await supabase.from('provinces').select('name').eq('id', profileData.province).maybeSingle();
+         if (pData) provinceName = pData.name;
+      }
+      if (profileData.city && profileData.city.length > 30) {
+         const { data: mData } = await supabase.from('municipalities').select('name').eq('id', profileData.city).maybeSingle();
+         if (mData) cityName = mData.name;
+      }
+
+      const signUpOptions = {
+        data: {
+          role,
+          name: profileData.name || null,
+          phone: cleanPhone || null,
+          province: provinceName || null,
+          city: cityName || null,
+          province_id: profileData.province?.length > 30 ? profileData.province : null,
+          municipality_id: profileData.city?.length > 30 ? profileData.city : null,
+          category_id: profileData.category_id || null,
+          description: profileData.description || null,
+          hours: profileData.hours || null,
+          company_name: profileData.company_name || null,
+        }
+      };
+
+      // 1. Sign up on Supabase Auth (passing initial metadata options to trigger handles)
+      let { data: authData, error: authError } = await supabase.auth.signUp({
+        ...authPayload,
+        options: signUpOptions
+      })
 
       if (authError) {
         console.error("Auth Error:", authError)
@@ -326,20 +360,6 @@ export function AuthProvider({ children }) {
 
       if (!authData || !authData.user) {
         return { success: false, error: isPhoneSignup ? 'Ocorreu um erro ou este número de telefone já está em uso na plataforma.' : 'Ocorreu um erro ou este e-mail já está em uso na plataforma. Tente recuperar a palavra-passe ou usar outro e-mail.' }
-      }
-
-      // Se for registo por telefone, forçar login para obter a sessão ativa imediatamente
-      let activeSession = authData.session;
-      if (isPhoneSignup && !activeSession) {
-        try {
-          const { data: loginData } = await supabase.auth.signInWithPassword(authPayload);
-          if (loginData?.session) {
-            activeSession = loginData.session;
-            authData = { ...authData, session: loginData.session };
-          }
-        } catch (err) {
-          console.warn("Falha ao forçar login automático de telefone:", err);
-        }
       }
 
       const authUserId = authData.user.id
@@ -368,21 +388,6 @@ export function AuthProvider({ children }) {
 
       delete profileData.documents
 
-      // 3. Resolve Location Names for backward compatibility while saving IDs
-      let provinceName = profileData.province;
-      let cityName = profileData.city;
-      
-      // If province is a UUID (meaning it came from the new dynamic select)
-      if (profileData.province && profileData.province.length > 30) {
-         const { data: pData } = await supabase.from('provinces').select('name').eq('id', profileData.province).maybeSingle();
-         if (pData) provinceName = pData.name;
-      }
-      // If city is a UUID
-      if (profileData.city && profileData.city.length > 30) {
-         const { data: mData } = await supabase.from('municipalities').select('name').eq('id', profileData.city).maybeSingle();
-         if (mData) cityName = mData.name;
-      }
-
       const nifValue = profileData.nif;
       delete profileData.nif;
 
@@ -405,6 +410,20 @@ export function AuthProvider({ children }) {
 
       // Guardar o perfil localmente em cache para caso a inserção falhe devido a RLS anonimo
       localStorage.setItem('pending_mimu_profile', JSON.stringify(newProfile));
+
+      // Se for registo por telefone e não temos sessão, forçar login agora que o perfil pendente já está no localStorage!
+      let activeSession = authData.session;
+      if (isPhoneSignup && !activeSession) {
+        try {
+          const { data: loginData } = await supabase.auth.signInWithPassword(authPayload);
+          if (loginData?.session) {
+            activeSession = loginData.session;
+            authData = { ...authData, session: loginData.session };
+          }
+        } catch (err) {
+          console.warn("Falha ao forçar login automático de telefone:", err);
+        }
+      }
 
       // Insert (or upsert if trigger already created the row) 
       const { error: profileError } = await supabase

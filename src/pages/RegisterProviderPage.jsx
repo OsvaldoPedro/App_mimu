@@ -49,6 +49,11 @@ export default function RegisterProviderPage() {
     let { name, value } = e.target
 
     if (name === 'phone') value = enforceNumeric(value).substring(0, 9)
+    // Para o campo email/telefone: se só tem dígitos, limitar a 9
+    if (name === 'email') {
+      const onlyDigits = value.replace(/\D/g, '') === value.trim() && !value.includes('@') && value.trim() !== ''
+      if (onlyDigits && value.replace(/\D/g, '').length > 9) return
+    }
     if (name === 'name') value = enforceAlphaText(value)
     if (name === 'nif') value = enforceNIF(value)
 
@@ -98,7 +103,7 @@ export default function RegisterProviderPage() {
     const isEmail = isValidEmail(form.email);
     
     if (!isEmail && !isPhone) {
-      setError('Por favor, insira um e-mail válido ou um número de telefone com 9 dígitos.')
+      setError('Por favor, insira um e-mail válido ou um número de telefone válido.')
       return;
     }
 
@@ -254,10 +259,10 @@ export default function RegisterProviderPage() {
               <input name="name" value={form.name} onChange={handleChange} required
                 className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
             </div>
-              
               <div>
                 <label className="block text-sm font-medium text-mimu-wine-text dark:text-white mb-2">E-mail / Telefone</label>
-                <input name="email" type="text" placeholder="Digite seu e-mail ou telefone" value={form.email} onChange={handleChange} required
+                <input name="email" type="text" placeholder="E-mail ou telef. (9 dígitos)" value={form.email} onChange={handleChange} required
+                  maxLength={form.email.includes('@') ? undefined : 9}
                   className="w-full px-4 py-3 rounded-xl border-2 border-mimu-cream-border dark:border-[#2A2A2A] focus:border-mimu-gold focus:outline-none focus:ring-2 focus:ring-mimu-gold focus:border-transparent" />
               </div>
 
