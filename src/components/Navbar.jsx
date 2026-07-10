@@ -45,7 +45,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2 md:gap-3">
             <BackButton variant="light" />
             <Link to="/" className="flex items-center group">
-              <img src="/mimu-logo.png" alt="Mimu Logo" className="h-[58px] md:h-[68px] w-auto object-contain transition-transform group-hover:scale-105" />
+              <img src="/mimu-logo.png" alt="Mimu Logo" className="h-[72px] md:h-[84px] w-auto object-contain transition-transform group-hover:scale-105" />
             </Link>
           </div>
 
